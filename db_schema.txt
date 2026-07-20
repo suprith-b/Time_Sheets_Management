@@ -1,0 +1,64 @@
+create database timesheets_db;
+use timesheets_db;
+
+create table Roles (
+	id int primary key auto_increment,
+    role enum( 'employee', 'manger', 'admin' )
+);
+
+
+create table Users (
+	id int primary key auto_increment,
+    username varchar( 30 ),
+    role_id int,
+	name varchar( 50 ),
+    email varchar( 50 ),
+    password varchar( 60 ),
+    foreign key( role_id ) references Roles( id )
+);
+
+create table Manager_assignments ( 
+	employee_id int, 
+    manager_id int,
+    foreign key( employee_id ) references Users( id ),
+    foreign key( manager_id ) references Users( id ),
+    primary key ( employee_id, manager_id )
+);
+
+create table Projects (
+	id int primary key auto_increment,
+    name varchar ( 50 ),
+    description varchar( 300 ),
+    start_date date,
+    end_date date,
+    status enum( 'created', 'in_progress', 'completed' )
+);
+
+create table Project_assignments (
+	user_id int,
+    project_id int,
+    foreign key( user_id ) references Users( id ),
+    foreign key( project_id ) references Projects( id ),
+    primary key( user_id, project_id )
+);
+
+create table Tasks (
+	id int primary key auto_increment,
+    project_id int,
+    name varchar( 50 ),
+    description varchar( 200 ),
+    foreign key( project_id ) references Projects( id )
+);
+
+create table Works (
+	id int primary key auto_increment,
+    user_id int,
+    task_id int,
+	start_time timestamp,
+    end_time timestamp,
+    comments varchar( 500 ),
+    type enum( 'standard', 'over_time' ),
+    foreign key( user_id ) references Users( id ), 
+    foreign key( task_id ) references Tasks( id )
+);
+
