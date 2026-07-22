@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, Foreignkey, TIMESTAMP, Enum as SQLEnum
 from app.db.database import Base
 from enum import Enum
+from app.models.UserModel import User
+from app.models.TaskModel import Task
 
 class TypeEnum( Base ):
     STANDARD = "standard"

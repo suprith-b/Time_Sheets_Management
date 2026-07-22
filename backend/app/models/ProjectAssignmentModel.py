@@ -1,5 +1,8 @@
 from sqlalchemy import Column, Integer, String, Foreignkey
 from app.db.database import Base
+from app.models.UserModel import User
+from app.models.ProjectModel import Project
+
 
 class ProjectAssignment( Base ):
     __tablename__ = "project_assignments"
