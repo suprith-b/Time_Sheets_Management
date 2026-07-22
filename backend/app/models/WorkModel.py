@@ -4,7 +4,7 @@ from enum import Enum
 from app.models.UserModel import User
 from app.models.TaskModel import Task
 
-class TypeEnum( Base ):
+class TypeEnum( str, Enum ):
     STANDARD = "standard"
     OVERTIME = "over_time"
 

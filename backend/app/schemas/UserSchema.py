@@ -2,28 +2,39 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 
-class CreateUser(BaseModel):
+class CreateUserRequest(BaseModel):
+
     username: str
     role_id: int
-    manager_id: Optional [ int ]
+    manager_id: Optional [ int ] = None
     name: str
     email: str
     password: str
+
+class CreateUserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-class EditUser(BaseModel):
-    username: Optional[str]
-    role_id: Optional[int]
-    manager_id: Optional[int]
-    name: Optional[str]
-    email: Optional[str]
-    model_config = ConfigDict(from_attributes=True)
-
-class UserResponse(BaseModel):
     id: int
     username: str
     role_id: int
-    manager_id: Optional[int]
+    manager_id: Optional [ int ] = None
     name: str
     email: str
+    password: str
+
+class EditUser(BaseModel):
+    username: Optional[str] = None
+    role_id: Optional[int] = None
+    manager_id: Optional[int] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    role_id: int
+    manager_id: Optional[int] = None
+    name: str
+    email: str

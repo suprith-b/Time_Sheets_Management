@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Enum as SQLEnum
 from app.db.database import Base
 from enum import Enum
 
-class RoleEnum ( Enum ):
+class RoleEnum ( str, Enum ):
     ADMIN = "admin"
     MANAGER = "manager"
     EMPLOYEE = "employee"

@@ -1,9 +1,11 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 import app.schemas.UserSchema as UserSchema
+import app.schemas.ProjectAssignmentSchema as ProjectAssignmentSchema
+from app.models.RoleModel import RoleEnum
 from app.dependencies.auth import get_current_user
 from app.services.UserService import UserService
 
@@ -14,6 +16,7 @@ router = APIRouter(
 
 @router.get( "" )
 def get_users(
+	roles: list[RoleEnum] = Query(default_factory=lambda: list(RoleEnum)),
     db: Session = Depends( get_db ),
     current_user: dict = Depends(get_current_user)
 ):
@@ -22,7 +25,7 @@ def get_users(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to access this resource",
         )
-    return UserService.get_users( current_user, db )
+    return UserService.get_users( current_user, roles, db )
 
 @router.get( "/{user_id}" )
 def get_user(
@@ -39,7 +42,7 @@ def get_user(
 
 @router.post( "" )
 def create_user(
-    data: UserSchema.CreateUser,
+    data: UserSchema.CreateUserRequest,
     db: Session = Depends( get_db ),
     current_user: dict = Depends(get_current_user)
 ):
@@ -76,3 +79,17 @@ def edit_user(
             detail="You do not have permission to access this resource",
         )
     return UserService.edit_user( user_id, data, db )
+
+@router.put( "/assign/projects/{user_id}" )
+def assign_projects(
+    user_id: int,
+    data: ProjectAssignmentSchema.AssignProjectsRequest,
+    db: Session = Depends( get_db ),
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["user_role"] not in {"admin", "manager"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this resource",
+        )
+    return UserService.assign_projects( user_id, data, current_user, db )
