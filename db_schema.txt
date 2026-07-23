@@ -3,7 +3,7 @@ use timesheets_db;
 
 create table Roles (
 	id int primary key auto_increment,
-    role enum( 'employee', 'manger', 'admin' )
+	role enum( 'employee', 'manager', 'admin' )
 );
 
 

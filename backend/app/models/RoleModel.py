@@ -11,4 +11,4 @@ class Role ( Base ):
     __tablename__ = "roles"
 
     id = Column( Integer, primary_key = True, autoincrement = True )
-    role = Column( SQLEnum( RoleEnum ), nullable = False )
+    role = Column( SQLEnum( RoleEnum, values_callable = lambda values: [ value.value for value in values ] ), nullable = False )
