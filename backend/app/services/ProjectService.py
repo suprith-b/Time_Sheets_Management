@@ -25,16 +25,6 @@ class ProjectService:
 		return ProjectSchema.ProjectResponse.model_validate(project)
 
 	@staticmethod
-	def delete_project(project_id: int, db: Session):
-		project = ProjectRepository.delete_project(project_id, db)
-		if project is None:
-			raise HTTPException(
-				status_code=status.HTTP_404_NOT_FOUND,
-				detail="Project not found",
-			)
-		return ProjectSchema.ProjectResponse.model_validate(project)
-
-	@staticmethod
 	def edit_project(
 		project_id: int,
 		data: ProjectSchema.EditProject,

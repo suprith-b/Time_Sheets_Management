@@ -34,20 +34,6 @@ def create_project(
 	return ProjectService.create_project(data, db)
 
 
-@router.delete("/{project_id}")
-def delete_project(
-	project_id: int,
-	db: Session = Depends(get_db),
-	current_user: dict = Depends(get_current_user),
-):
-	if current_user["user_role"] != "admin":
-		raise HTTPException(
-			status_code=status.HTTP_403_FORBIDDEN,
-			detail="You do not have permission to access this resource",
-		)
-	return ProjectService.delete_project(project_id, db)
-
-
 @router.patch("/{project_id}")
 def edit_project(
 	project_id: int,

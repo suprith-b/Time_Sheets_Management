@@ -54,16 +54,6 @@ class ProjectRepository:
 		return project
 
 	@staticmethod
-	def delete_project(project_id: int, db: Session):
-		project = ProjectRepository.get_project_by_id(project_id, db)
-		if project is None:
-			return None
-
-		db.delete(project)
-		db.commit()
-		return project
-
-	@staticmethod
 	def edit_project(
 		project_id: int,
 		data: ProjectSchema.EditProject,
