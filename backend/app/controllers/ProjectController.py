@@ -9,7 +9,7 @@ import app.schemas.ProjectSchema as ProjectSchema
 from app.services.ProjectService import ProjectService
 
 
-router = APIRouter(prefix="/projects")
+router = APIRouter(prefix="/project")
 
 
 @router.get("")
