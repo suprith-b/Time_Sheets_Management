@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from app.models.TimeLogModel import TimeLog
+from app.models.TimeLogModel import TimeLog, TypeEnum
 from app.models.UserModel import User
 from app.models.ProjectModel import Project
 
@@ -15,6 +15,7 @@ class AnalyticsRepository:
         start_date: datetime,
         end_date: datetime,
         project_ids: list[int] | None,
+        type_filters: list[TypeEnum],
         sort_by: str,
         sort_type: int,
         current_user_id: int,
@@ -44,6 +45,9 @@ class AnalyticsRepository:
 
         if project_ids:
             query = query.filter(TimeLog.project_id.in_(project_ids))
+
+        if type_filters:
+            query = query.filter(TimeLog.type.in_(type_filters))
 
         query = query.group_by(User.id, Project.id)
 

@@ -2,6 +2,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.models.TimeLogModel import TypeEnum
 from app.repositories.AnalyticsRepository import AnalyticsRepository
 import app.schemas.AnalyticsSchema as AnalyticsSchema
 
@@ -14,6 +15,7 @@ class AnalyticsService:
         start_date: datetime,
         end_date: datetime,
         project_ids: list[int] | None,
+        type_filters: list[TypeEnum],
         sort_by: str,
         sort_type: int,
         current_user: dict,
@@ -37,6 +39,7 @@ class AnalyticsService:
             start_date=start_date,
             end_date=end_date,
             project_ids=project_ids,
+            type_filters=type_filters,
             sort_by=sort_by,
             sort_type=sort_type,
             current_user_id=current_user["user_id"],
