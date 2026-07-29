@@ -22,7 +22,7 @@ __pycache__/
 Thumbs.db
 
 # Agents
-.agents/
+**/.agents/
 
 # Python build/distribution
 *.egg-info/
