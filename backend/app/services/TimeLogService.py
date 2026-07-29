@@ -12,6 +12,43 @@ import app.schemas.TimeLogSchema as TimeLogSchema
 class TimeLogService:
 
     @staticmethod
+    def get_user_hours(
+        user_id: int,
+        start_date: datetime | None,
+        end_date: datetime | None,
+        type_filters: list[TypeEnum] | None,
+        current_user: dict,
+        db: Session,
+    ) -> TimeLogSchema.TimeLogHoursResponse:
+        user_roles = current_user.get("user_roles", [])
+        current_user_id = current_user.get("user_id")
+
+        if "admin" in user_roles:
+            pass
+        elif current_user_id == user_id:
+            pass
+        elif "manager" in user_roles:
+            if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You do not have permission to access this resource",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access this resource",
+            )
+
+        total_hours = TimeLogRepository.get_total_hours(
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+            type_filters=type_filters,
+            db=db,
+        )
+        return TimeLogSchema.TimeLogHoursResponse(total_hours=total_hours)
+
+    @staticmethod
     def create_time_logs(
         user_id: int,
         data: TimeLogSchema.CreateTimeLogsRequest,

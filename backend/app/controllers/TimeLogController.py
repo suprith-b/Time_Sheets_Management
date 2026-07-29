@@ -55,6 +55,26 @@ def get_user_timelogs(
         db=db,
     )
 
+@router.get( "/hours/{user_id}", response_model=TimeLogSchema.TimeLogHoursResponse, )
+def get_user_timelog_hours(
+    user_id: int,
+    start_date: datetime | None = Query(default=datetime(1970, 1, 1)),
+    end_date: datetime | None = Query(default_factory=datetime.now),
+    type: list[TypeEnum] | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    RoleValidation.validate_role(current_user, ["admin", "manager", "employee"])
+
+    return TimeLogService.get_user_hours(
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+        type_filters=type,
+        current_user=current_user,
+        db=db,
+    )
+
 
 
 @router.patch(

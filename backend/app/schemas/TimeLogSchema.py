@@ -62,3 +62,7 @@ class TimeLogMessageResponse(BaseModel):
 
     message: str
 
+class TimeLogHoursResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    total_hours: float

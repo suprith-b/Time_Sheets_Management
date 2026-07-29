@@ -13,6 +13,30 @@ import app.schemas.TimeLogSchema as TimeLogSchema
 class TimeLogRepository:
 
     @staticmethod
+    def get_total_hours(
+        user_id: int,
+        start_date: date | None,
+        end_date: date | None,
+        type_filters: list[TypeEnum] | None,
+        db: Session,
+    ) -> float:
+        query = db.query(TimeLog).filter(TimeLog.user_id == user_id)
+
+        if start_date is not None:
+            query = query.filter(TimeLog.start_time >= datetime.combine(start_date, time.min))
+
+        if end_date is not None:
+            query = query.filter(TimeLog.start_time <= datetime.combine(end_date, time.max))
+
+        if type_filters:
+            query = query.filter(TimeLog.type.in_(type_filters))
+
+        total_minutes = sum(
+            (log.end_time - log.start_time).total_seconds() / 60.0 for log in query.all() if log.end_time
+        )
+        return round(total_minutes / 60.0, 2)  # Convert minutes to hours and round to 2 decimal places
+
+    @staticmethod
     def is_valid_project_and_task(project_id: int, task_id: int, user_id: int, db: Session) -> bool:
         if not ProjectRepository.is_assigned([project_id], user_id, db):
             return False
