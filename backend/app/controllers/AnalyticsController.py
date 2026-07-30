@@ -6,7 +6,7 @@ from app.db.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.TimeLogModel import TypeEnum
 import app.schemas.AnalyticsSchema as AnalyticsSchema
-from app.services.AnalyticService import AnalyticsService
+from app.services.AnalyticsService import AnalyticsService
 from app.utils.RoleValidation import RoleValidation
 
 router = APIRouter(prefix="/analytics")

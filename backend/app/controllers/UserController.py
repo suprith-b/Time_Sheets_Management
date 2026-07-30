@@ -1,5 +1,4 @@
-from app.utils.security import hash_password
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -8,6 +7,7 @@ from app.models.RoleModel import RoleEnum
 import app.schemas.UserSchema as UserSchema
 from app.services.UserService import UserService
 from app.utils.RoleValidation import RoleValidation
+from app.core.exceptions import AccessDeniedError
 
 router = APIRouter(prefix="/users")
 
@@ -66,10 +66,7 @@ def update_password(
     current_user: dict = Depends(get_current_user),
 ):
     if current_user["user_id"] != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have permission to access this resource",
-        )
+        raise AccessDeniedError()
     return UserService.update_password(user_id, data, db)
 
 

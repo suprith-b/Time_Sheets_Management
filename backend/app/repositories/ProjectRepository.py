@@ -26,6 +26,10 @@ class ProjectRepository:
             ProjectAssignment.user_id == user_id
         ).count() == len(project_ids)
 
+    @staticmethod
+    def are_projects_present(project_ids: list[int], db: Session) -> bool:
+        return db.query(Project.id).filter(Project.id.in_(project_ids)).count() == len(set(project_ids))
+
 
     @staticmethod
     def create_project(data: ProjectSchema.ProjectCreateRequest, db: Session) -> Project:

@@ -1,10 +1,4 @@
-from fastapi import status
-from fastapi import HTTPException
 from fastapi import Request
-from fastapi import responses
-from datetime import timedelta
-from datetime import UTC
-from datetime import datetime
 from app.utils.security import create_access_token, create_refresh_token
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
@@ -12,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 import app.schemas.AuthSchema as AuthSchema
 from app.services.AuthService import AuthService
+from app.core.exceptions import InvalidAuthenticationTokenError, RefreshTokenMissingError
 
 router = APIRouter(prefix="/auth")
 
@@ -54,17 +49,11 @@ def refresh(
     token = request.cookies.get("refresh_token")
 
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token missing"
-        )
+        raise RefreshTokenMissingError()
     
     user_details = AuthService.refresh(token, db)
     if user_details is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid refresh token"
-        )
+        raise InvalidAuthenticationTokenError("Invalid refresh token")
 
     access_token = create_access_token( user_details )
 

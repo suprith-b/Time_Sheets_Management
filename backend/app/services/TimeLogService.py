@@ -1,5 +1,4 @@
 from datetime import datetime
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.TimeLogModel import TypeEnum
@@ -7,6 +6,7 @@ from app.repositories.ProjectRepository import ProjectRepository
 from app.repositories.TimeLogRepository import TimeLogRepository
 from app.repositories.AssignmentRepository import AssignmentRepository
 import app.schemas.TimeLogSchema as TimeLogSchema
+from app.core.exceptions import AccessDeniedError, InvalidProjectTaskAssignmentError, InvalidTimeLogSortFieldError, InvalidTimeRangeError, TimeLogNotFoundError
 
 
 class TimeLogService:
@@ -29,15 +29,9 @@ class TimeLogService:
             pass
         elif "manager" in user_roles:
             if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have permission to access this resource",
-                )
+                raise AccessDeniedError()
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource",
-            )
+            raise AccessDeniedError()
 
         total_hours = TimeLogRepository.get_total_hours(
             user_id=user_id,
@@ -58,22 +52,13 @@ class TimeLogService:
         user_roles = current_user.get("user_roles", [])
         if "admin" not in user_roles:
             if current_user.get("user_id") != user_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have permission to perform this action",
-                )
+                raise AccessDeniedError("You do not have permission to perform this action")
 
         for item in data.time_logs:
             if item.start_time > item.end_time:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="start_time must be less than or equal to end_time",
-                )
+                raise InvalidTimeRangeError()
             if not TimeLogRepository.is_valid_project_and_task(item.project_id, item.task_id, user_id, db):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid project_id {item.project_id} or task_id {item.task_id}",
-                )
+                raise InvalidProjectTaskAssignmentError(f"Invalid project_id {item.project_id} or task_id {item.task_id}")
 
         TimeLogRepository.create_time_logs(user_id, data.time_logs, db)
         return TimeLogSchema.TimeLogMessageResponse(message="Time logs successfully created")
@@ -90,6 +75,9 @@ class TimeLogService:
         current_user: dict,
         db: Session,
     ) -> list[TimeLogSchema.TimeLogDetailResponse]:
+        if sort_by not in {"project_name", "start_time"}:
+            raise InvalidTimeLogSortFieldError()
+
         user_roles = current_user.get("user_roles", [])
         current_user_id = current_user.get("user_id")
 
@@ -99,15 +87,9 @@ class TimeLogService:
             pass
         elif "manager" in user_roles:
             if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have permission to access this resource",
-                )
+                raise AccessDeniedError()
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource",
-            )
+            raise AccessDeniedError()
 
         rows = TimeLogRepository.get_user_timelogs(
             user_id=user_id,
@@ -130,30 +112,21 @@ class TimeLogService:
     ) -> TimeLogSchema.TimeLogResponse:
         timelog = TimeLogRepository.get_timelog_by_id(timelog_id, db)
         if not timelog:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="TimeLog not found",
-            )
+            raise TimeLogNotFoundError()
 
         effective_project_id = data.project_id if data.project_id is not None else timelog.project_id
         effective_task_id = data.task_id if data.task_id is not None else timelog.task_id
 
         if data.project_id is not None or data.task_id is not None:
             if not TimeLogRepository.is_valid_project_and_task(effective_project_id, effective_task_id, timelog.user_id, db):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid project_id or task_id",
-                )
+                raise InvalidProjectTaskAssignmentError()
 
         effective_start_time = data.start_time if data.start_time is not None else timelog.start_time
         effective_end_time = data.end_time if data.end_time is not None else timelog.end_time
 
         if data.start_time is not None or data.end_time is not None:
             if effective_start_time > effective_end_time:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="start_time must be less than or equal to end_time",
-                )
+                raise InvalidTimeRangeError()
 
         updates = data.model_dump(exclude_none=True)
         updated_log = TimeLogRepository.update_timelog(timelog, updates, db)

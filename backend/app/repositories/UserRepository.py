@@ -22,6 +22,10 @@ class UserRepository:
         return { "user": user, "roles": roles }
 
     @staticmethod
+    def are_users_present(user_ids: list[int], db: Session) -> bool:
+        return db.query(User.id).filter(User.id.in_(user_ids)).count() == len(set(user_ids))
+
+    @staticmethod
     def check_user_roles( user_ids: list[ int ], role: RoleEnum, db: Session ) -> bool:
         role_id = db.query( Role ).filter( Role.role == role ).first().id
         return db.query( RoleAssignment ).filter(

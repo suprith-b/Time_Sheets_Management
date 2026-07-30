@@ -1,6 +1,4 @@
 from sqlalchemy.orm import Session
-from starlette import status
-from fastapi import HTTPException
 from datetime import date, timedelta
 from typing import List
 
@@ -8,6 +6,7 @@ from app.models.ProjectModel import StatusEnum
 from app.repositories.ProjectRepository import ProjectRepository
 import app.schemas.ProjectSchema as ProjectSchema
 from app.repositories.AssignmentRepository import AssignmentRepository
+from app.core.exceptions import AccessDeniedError, ArchivedProjectModificationError, ProjectFieldUpdateForbiddenError, ProjectNotFoundError
 
 class ProjectService:
 
@@ -26,10 +25,7 @@ class ProjectService:
     def soft_delete_project(project_id: int, db: Session) -> ProjectSchema.ProjectResponse:
         project = ProjectRepository.soft_delete_project(project_id, db)
         if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="Project not found"
-            )
+            raise ProjectNotFoundError()
         return ProjectSchema.ProjectResponse(**project.__dict__)
 
     @staticmethod
@@ -37,27 +33,21 @@ class ProjectService:
         
         project = ProjectRepository.get_project_by_id( project_id, db )
         if project is None:
-            raise HTTPException(
-                status_code = status.HTTP_404_NOT_FOUND,
-                detail = "Project not found"
-            )
+            raise ProjectNotFoundError()
 
         is_admin = "admin" in current_user.get("user_roles", [])
         is_manager = "manager" in current_user.get("user_roles", [])
 
         if not is_admin and not is_manager:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role")
+            raise AccessDeniedError("Insufficient role")
 
         if is_manager and project.status == StatusEnum.ARCHIVED:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Managers cannot modify archived projects")
+            raise ArchivedProjectModificationError()
 
         changed_fields = data.model_dump( exclude_none=True )
 
         if not is_admin and len( set( changed_fields ).union( { "end_date", "status", "duration" } ) ) > 3:
-            raise HTTPException(
-                status_code = status.HTTP_403_FORBIDDEN,
-                detail = "One or more fields cannot be changed by manager"
-            )
+            raise ProjectFieldUpdateForbiddenError()
 
         if data.status is not None and project.start_date is None:
             data.start_date = date.today()
@@ -88,15 +78,9 @@ class ProjectService:
         elif "manager" in user_roles:
 
             if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have permission to this resource",
-                )
+                raise AccessDeniedError("You do not have permission to this resource")
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource",
-            )
+            raise AccessDeniedError()
 
         status_list = [StatusEnum(s) for s in status_filters]
         projects = ProjectRepository.get_projects(
