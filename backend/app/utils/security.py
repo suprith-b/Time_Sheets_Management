@@ -20,7 +20,7 @@ def create_access_token( user_details: dict ) -> str:
     payload[ "user_id" ] = user_details.id
     payload[ "user_userid" ] = user_details.userid
     payload[ "user_roles" ] = user_details.roles
-    payload[ "exp" ] = (datetime.now(UTC) + timedelta(minutes=15)).timestamp()
+    payload[ "exp" ] = (datetime.now(UTC) + timedelta(days = 1)).timestamp()
     return create_JWT_token( payload )
 
 def create_refresh_token( user_id: int ) -> str:

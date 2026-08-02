@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 
+from app.models.RoleModel import RoleEnum as RE
 from app.models.TimeLogModel import TypeEnum
 from app.repositories.AnalyticsRepository import AnalyticsRepository
 import app.schemas.AnalyticsSchema as AnalyticsSchema
@@ -23,9 +24,9 @@ class AnalyticsService:
     ) -> list[AnalyticsSchema.ReportResponse]:
         user_roles = current_user.get("user_roles", [])
 
-        if as_role == "admin" and "admin" not in user_roles:
+        if as_role == RE.ADMIN and RE.ADMIN not in user_roles:
             raise AdminAccessRequiredError()
-        if as_role == "manager" and "manager" not in user_roles:
+        if as_role == RE.MANAGER and RE.MANAGER not in user_roles:
             raise ManagerAccessRequiredError()
 
         rows = AnalyticsRepository.get_report_data(

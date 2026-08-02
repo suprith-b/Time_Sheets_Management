@@ -4,24 +4,29 @@ from datetime import date
 
 from app.dependencies.auth import get_current_user
 from app.db.database import get_db
+from app.models.RoleModel import RoleEnum as RE
 from sqlalchemy.orm import Session
 
 from app.utils.RoleValidation import RoleValidation
 import app.schemas.ProjectSchema as ProjectSchema
 from app.services.ProjectService import ProjectService
+from app.core.exceptions import AccessDeniedError
+from app.repositories.AssignmentRepository import AssignmentRepository
+from app.repositories.ProjectRepository import ProjectRepository
 
 router = APIRouter(prefix="/projects")
 
 
 @router.post("", 
-            response_model=ProjectSchema.ProjectResponse, 
-            status_code=status.HTTP_201_CREATED)
+    response_model=ProjectSchema.ProjectResponse, 
+    status_code=status.HTTP_201_CREATED
+)
 def create_project(
     data: ProjectSchema.ProjectCreateRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
     return ProjectService.create_project(data, db)
 
 
@@ -31,7 +36,7 @@ def delete_project(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
     return ProjectService.soft_delete_project(project_id, db)
 
 
@@ -42,12 +47,12 @@ def update_project(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
     return ProjectService.update_project(project_id, data, current_user, db)
 
 
-@router.get("/{user_id}", response_model=List[ProjectSchema.ProjectResponse])
-def list_projects(
+@router.get("/user/{user_id}", response_model=List[ProjectSchema.ProjectResponse])
+def get_user_projects(
     user_id: int,
     sort_by: Optional[str] = Query(default="duration"),
     sort_type: int = Query(default=-1),
@@ -55,14 +60,36 @@ def list_projects(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
+    if RE.ADMIN in current_user.get("user_roles", []):
+        pass
+    elif user_id == current_user.get("user_id"):
+        pass
+    elif RE.MANAGER in current_user.get("user_roles", []):
+        if not AssignmentRepository.can_view_users_projects(current_user.get("user_id"), [user_id], db):
+            raise AccessDeniedError("You cannot view projects of this user")
+    else:
+        raise AccessDeniedError("Insufficient role")
     return ProjectService.get_projects(
-        user_id=user_id,
         sort_by=sort_by,
         sort_type=sort_type,
         status_filters=status,
         current_user=current_user,
+        user_id=user_id,
         db=db,
     )
+
+
+@router.get("/{project_id}", response_model=ProjectSchema.ProjectResponse)
+def get_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
+    if not ProjectRepository.are_projects_assigned([project_id], current_user.get("user_id"), db):
+        raise AccessDeniedError("You are not assigned to this project")
+    return ProjectService.get_project_by_id(project_id, db)
 
 @router.get("", response_model=List[ProjectSchema.ProjectResponse])
 def get_projects(
@@ -72,8 +99,8 @@ def get_projects(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
-    return ProjectService.get_all_projects(
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
+    return ProjectService.get_projects(
         sort_by=sort_by,
         sort_type=sort_type,
         status_filters=status,

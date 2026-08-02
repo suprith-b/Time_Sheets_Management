@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
 
 from app.dependencies.auth import get_current_user
+from app.models.RoleModel import RoleEnum as RE
 from app.db.database import get_db
 from sqlalchemy.orm import Session
 
@@ -22,7 +23,7 @@ def create_task(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
     return TaskService.create_task(project_id, data, current_user, db)
 
 @router.patch(
@@ -35,7 +36,7 @@ def update_task(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
     return TaskService.update_task(task_id, data, current_user, db)
 
 @router.delete(
@@ -47,7 +48,7 @@ def delete_task(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
     return TaskService.delete_task(task_id, current_user, db)
 
 @router.get(

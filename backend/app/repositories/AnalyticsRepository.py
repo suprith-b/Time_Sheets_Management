@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
+from app.models.RoleModel import RoleEnum as RE
 from app.models.TimeLogModel import TimeLog, TypeEnum
 from app.models.UserModel import User
 from app.models.ProjectModel import Project
@@ -40,7 +41,7 @@ class AnalyticsRepository:
             .filter(TimeLog.start_time <= end_date)
         )
 
-        if as_role != "admin":
+        if as_role != RE.ADMIN:
             query = query.filter(User.manager_id == current_user_id)
 
         if project_ids:

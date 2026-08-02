@@ -9,6 +9,9 @@ class AccessDeniedError(ApplicationHTTPException):
     def __init__(self, detail: str = "You do not have permission to access this resource"):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
+class RepeatedDataError(ApplicationHTTPException):
+    def __init__( self, detail: str = "One or more fields already exist"):
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 class AdminAccessRequiredError(AccessDeniedError):
     def __init__(self):
@@ -74,6 +77,9 @@ class InvalidTimeRangeError(ApplicationHTTPException):
     def __init__(self):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail="start_time must be less than or equal to end_time")
 
+class InvalidDateRangeError(ApplicationHTTPException):
+    def __init__(self, detail: str = "start_date must be less than or equal to end_date"):
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 class InvalidProjectTaskAssignmentError(ApplicationHTTPException):
     def __init__(self, detail: str = "Invalid project_id or task_id"):

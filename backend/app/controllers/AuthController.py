@@ -17,7 +17,6 @@ def login(
     db: Session = Depends(get_db),
 ):
     user_details = AuthService.login(data, db)
-
     access_token = create_access_token(user_details)
     refresh_token = create_refresh_token(user_details.id)
 
@@ -25,20 +24,20 @@ def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,      # False for local HTTP development
+        secure=False,
         samesite="lax",
-        max_age=15 * 60,
+        max_age= 24 * 60 * 60,
     )
     
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=7 * 24 * 60 * 60,
     )
-    return {"message": "Login successful"}
+    return user_details
 
 @router.post( "/refresh" )
 def refresh(
@@ -61,7 +60,7 @@ def refresh(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age= 15 * 60
     )

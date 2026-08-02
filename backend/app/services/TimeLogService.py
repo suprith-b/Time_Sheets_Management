@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 
+from app.models.RoleModel import RoleEnum as RE
 from app.models.TimeLogModel import TypeEnum
 from app.repositories.ProjectRepository import ProjectRepository
 from app.repositories.TimeLogRepository import TimeLogRepository
@@ -23,12 +24,12 @@ class TimeLogService:
         user_roles = current_user.get("user_roles", [])
         current_user_id = current_user.get("user_id")
 
-        if "admin" in user_roles:
+        if RE.ADMIN in user_roles:
             pass
         elif current_user_id == user_id:
             pass
-        elif "manager" in user_roles:
-            if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
+        elif RE.MANAGER in user_roles:
+            if not AssignmentRepository.can_view_users_projects(current_user_id, [user_id], db):
                 raise AccessDeniedError()
         else:
             raise AccessDeniedError()
@@ -50,7 +51,7 @@ class TimeLogService:
         db: Session,
     ) -> TimeLogSchema.TimeLogMessageResponse:
         user_roles = current_user.get("user_roles", [])
-        if "admin" not in user_roles:
+        if RE.ADMIN not in user_roles:
             if current_user.get("user_id") != user_id:
                 raise AccessDeniedError("You do not have permission to perform this action")
 
@@ -81,12 +82,12 @@ class TimeLogService:
         user_roles = current_user.get("user_roles", [])
         current_user_id = current_user.get("user_id")
 
-        if "admin" in user_roles:
+        if RE.ADMIN in user_roles:
             pass
         elif current_user_id == user_id:
             pass
-        elif "manager" in user_roles:
-            if not AssignmentRepository.are_users_managed_by(current_user_id, [user_id], db):
+        elif RE.MANAGER in user_roles:
+            if not AssignmentRepository.can_view_users_projects(current_user_id, [user_id], db):
                 raise AccessDeniedError()
         else:
             raise AccessDeniedError()

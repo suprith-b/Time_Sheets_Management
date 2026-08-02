@@ -2,7 +2,7 @@ from app.repositories.ProjectRepository import ProjectRepository
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AccessDeniedError, ProjectAssignmentRequiredError, UserNotFoundError
-from app.models.RoleModel import RoleEnum
+from app.models.RoleModel import RoleEnum as RE
 from app.repositories.UserRepository import UserRepository
 import app.schemas.UserSchema as UserSchema
 
@@ -12,20 +12,24 @@ class UserService:
     @staticmethod
     def get_users(
         current_user: dict,
-        roles: list[RoleEnum],
+        roles: list[RE],
         manager_id: int | None,
         is_alive: list[int],
         project_ids: list[int] | None,
+        has_manager: list[ bool ],
         db: Session,
     ):
-        if "admin" not in current_user.get("user_roles") and manager_id is not None and manager_id != current_user.get("user_id"):
-            raise AccessDeniedError()
+        if RE.ADMIN not in current_user.get("user_roles"):
+            if manager_id is not None and manager_id != current_user.get("user_id"):
+                raise AccessDeniedError()
+            else:
+                manager_id = current_user.get("user_id")
 
-        if project_ids is not None and "admin" not in current_user.get("user_roles"):
-            if not ProjectRepository.is_assigned( project_ids, current_user.get("user_id"), db):
+        if project_ids is not None and RE.ADMIN not in current_user.get("user_roles"):
+            if not ProjectRepository.are_projects_assigned( project_ids, current_user.get("user_id"), db):
                 raise ProjectAssignmentRequiredError()
                 
-        users_data = UserRepository.get_users(db, roles, manager_id, is_alive, project_ids, current_user)
+        users_data = UserRepository.get_users(db, roles, manager_id, is_alive, project_ids, has_manager, current_user)
         return [UserSchema.UserResponse(**u) for u in users_data]
 
     @staticmethod
@@ -33,35 +37,37 @@ class UserService:
         user_roles = current_user.get("user_roles", [])
         current_user_id = current_user.get("user_id")
 
-        if "admin" not in user_roles and "manager" not in user_roles:
+        if RE.ADMIN not in user_roles and RE.MANAGER not in user_roles:
             if user_id != current_user_id:
                 raise AccessDeniedError()
 
-        user_data = UserRepository.get_user_detail_by_id(user_id, db)
+        user_data = UserRepository.get_user_by_id(user_id, db)
         if not user_data:
             raise UserNotFoundError()
 
-        if "admin" not in user_roles and "manager" in user_roles:
+        if RE.ADMIN not in user_roles and RE.MANAGER in user_roles:
             if user_id != current_user_id and user_data["manager_id"] != current_user_id:
                 raise AccessDeniedError()
 
-        return UserSchema.UserDetailResponse(**user_data)
+        return UserSchema.UserResponse(**user_data["user"]._mapping, roles=user_data["roles"])
 
 
 
     @staticmethod
     def create_user(data: UserSchema.CreateUserRequest, db: Session):
         user = UserRepository.create_user(data, db)
-        roles = [r.value for r in data.roles] if data.roles else [RoleEnum.EMPLOYEE.value]
+        roles = [r.value for r in data.roles] if data.roles else [RE.EMPLOYEE.value]
         return UserSchema.CreateUserResponse(
             id=user.id,
             name=user.name,
             userid=user.userid,
             username=data.username,
-            personal_mail=user.personal_mail,
+            phone_number=user.phone_number,
             company_mail=user.company_mail,
             password=data.password,
             roles=roles,
+            manager_id=user.manager_id,
+            manager_name=UserRepository.get_user_by_id(user.manager_id, db)['user'].name if user.manager_id else None
         )
 
     @staticmethod
@@ -75,9 +81,11 @@ class UserService:
             userid = user.userid,
             username=username,
             name = user.name,
-            manager_id=None,
-            manager_name=None,
-            roles=[],
+            manager_id=user.manager_id,
+            manager_name=UserRepository.get_user_by_id(user.manager_id, db)[ 'user' ].name if user.manager_id else None,
+            phone_number=user.phone_number,
+            roles=UserRepository.get_user_roles(user.id, db),
+            company_mail=user.company_mail,
             is_alive=user.is_alive
         )
 

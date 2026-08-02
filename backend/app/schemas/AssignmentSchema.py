@@ -1,46 +1,24 @@
 from pydantic import BaseModel, ConfigDict
-from app.models.RoleModel import RoleEnum
 
-
-class AssignUsersToManagerRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    employee_ids: list[int]
-
-
-class ProjectAssignmentRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    user_ids: list[int]
-    project_ids: list[int]
+from app.models.RoleModel import RoleEnum as RE
 
 
 class RoleAssignmentRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    user_ids: list[int]
-    roles: list[RoleEnum]
+    roles: list[RE]
 
 
-class AssignUsersToProjectRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    user_ids: list[int]
-
-
-class AssignProjectsToUserRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    project_ids: list[int]
+class UsersRoleAssignmentRequest(BaseModel):
+    users: list[int]
+    roles: list[RE]
 
 
-class AssignRolesToUserRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    roles: list[RoleEnum]
+class UserListRequest(BaseModel):
+    users: list[int]
 
 
-class AssignmentMessageResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class ProjectAssignmentRequest(BaseModel):
+    projects: list[int]
 
-    message: str
+
+class ProjectUserAssignmentRequest(BaseModel):
+    users: list[int]

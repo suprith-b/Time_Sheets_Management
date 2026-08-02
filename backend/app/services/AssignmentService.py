@@ -1,143 +1,102 @@
-from app.repositories import ProjectRepository
-from app.repositories.UserRepository import UserRepository
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import (
+    AccessDeniedError,
+    ManagerNotFoundError,
+    ManagedUserRequiredError,
+    ProjectAssignmentRequiredError,
+    ProjectNotFoundError,
+    UserNotFoundError,
+)
+from app.models.ProjectAssignmentModel import ProjectAssignment
+from app.models.RoleModel import RoleEnum as RE
+from app.models.UserModel import User
 from app.repositories.AssignmentRepository import AssignmentRepository
-import app.schemas.AssignmentSchema as AssignmentSchema
-from app.models.RoleModel import RoleEnum
-from app.core.exceptions import ManagerNotFoundError, ManagedUserRequiredError, ProjectAssignmentRequiredError, ProjectNotFoundError, UserNotFoundError
+from app.repositories.ProjectRepository import ProjectRepository
+from app.repositories.UserRepository import UserRepository
 
 
 class AssignmentService:
 
     @staticmethod
-    def assign_users_to_manager(
-        manager_id: int,
-        data: AssignmentSchema.AssignUsersToManagerRequest,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if not UserRepository.check_user_roles([manager_id], RoleEnum.MANAGER, db):
+    def add_roles_to_users(users: list[int], roles: list[RE], db: Session) -> None:
+        if not users or not roles:
+            return
+        if not UserRepository.are_users_present(users, db):
+            raise UserNotFoundError()
+
+        AssignmentRepository.add_user_roles(users, roles, db)
+
+    @staticmethod
+    def revoke_roles_from_users(users: list[int], roles: list[RE], db: Session) -> None:
+        if not users or not roles:
+            return
+        if not UserRepository.are_users_present(users, db):
+            raise UserNotFoundError()
+
+        AssignmentRepository.revoke_users_roles(users, roles, db)
+
+    @staticmethod
+    def assign_manager(manager_id: int, users: list[int], db: Session) -> None:
+        if not UserRepository.are_users_present(users, db):
+            raise UserNotFoundError()
+        if not UserRepository.check_users_role([manager_id], RE.MANAGER, db):
             raise ManagerNotFoundError()
-        if not UserRepository.check_user_roles( data.employee_ids, RoleEnum.EMPLOYEE, db):
-            raise UserNotFoundError("One or more employees not found")
+        if not UserRepository.check_users_role(users, RE.EMPLOYEE, db):
+            raise AccessDeniedError("One or more users are not employees")
 
-        AssignmentRepository.update_users_manager(manager_id, data.employee_ids, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Employees successfully assigned to manager")
-
-    @staticmethod
-    def assign_projects(
-        data: AssignmentSchema.ProjectAssignmentRequest,
-        current_user: dict,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if not UserRepository.are_users_present(data.user_ids, db):
-            raise UserNotFoundError("One or more users not found")
-        if not ProjectRepository.are_projects_present(data.project_ids, db):
-            raise ProjectNotFoundError("One or more projects not found")
-
-        if "admin" not in current_user.get("user_roles", []):
-            manager_id = current_user["user_id"]
-            if not ProjectRepository.is_assigned(data.project_ids, manager_id, db):
-                raise ProjectAssignmentRequiredError("One or more projects are not assigned to current manager")
-            if not AssignmentRepository.are_users_managed_by(manager_id, data.user_ids, db):
-                raise ManagedUserRequiredError()
-
-        AssignmentRepository.assign_projects(data.user_ids, data.project_ids, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Projects successfully assigned")
+        db.query(User).filter(User.id.in_(users)).update({User.manager_id: manager_id}, synchronize_session=False)
+        db.commit()
 
     @staticmethod
-    def deassign_projects(
-        data: AssignmentSchema.ProjectAssignmentRequest,
-        current_user: dict,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if not UserRepository.are_users_present(data.user_ids, db):
-            raise UserNotFoundError("One or more users not found")
-        if not ProjectRepository.are_projects_present(data.project_ids, db):
-            raise ProjectNotFoundError("One or more projects not found")
+    def add_projects_to_user(user_id: int, projects: list[int], current_user: dict, db: Session) -> None:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise UserNotFoundError()
+        if not ProjectRepository.are_projects_present(projects, db):
+            raise ProjectNotFoundError()
 
-        if "admin" not in current_user.get("user_roles", []):
-            manager_id = current_user["user_id"]
-            if not ProjectRepository.is_assigned(data.project_ids, manager_id, db):
-                raise ProjectAssignmentRequiredError("One or more projects are not assigned to current manager")
-            if not AssignmentRepository.are_users_managed_by(manager_id, data.user_ids, db):
-                raise ManagedUserRequiredError()
+        if not RE.ADMIN in current_user[ "user_roles" ]:
+            if not ProjectRepository.are_projects_assigned(projects, current_user["user_id"], db):
+                raise ProjectAssignmentRequiredError()
+            if not user.manager_id == current_user["user_id"]:
+                raise ManagedUserRequiredError("You are not the manager of this user")
 
-        AssignmentRepository.deassign_projects(data.user_ids, data.project_ids, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Projects successfully deassigned")
+        AssignmentRepository.add_projects_to_user(user_id, projects, current_user, db)
 
     @staticmethod
-    def assign_roles(
-        data: AssignmentSchema.RoleAssignmentRequest,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if not UserRepository.are_users_present(data.user_ids, db):
-            raise UserNotFoundError("One or more users not found")
-        AssignmentRepository.assign_roles(data.user_ids, data.roles, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Roles successfully assigned")
+    def revoke_projects_from_user(user_id: int, projects: list[int], current_user: dict, db: Session) -> None:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise UserNotFoundError()
+        
+        if not ProjectRepository.are_projects_present(projects, db):
+            raise ProjectNotFoundError()
+
+        if not RE.ADMIN in current_user[ "user_roles" ]:
+            if not ProjectRepository.are_projects_assigned(projects, current_user["user_id"], db):
+                raise ProjectAssignmentRequiredError()
+            if not AssignmentRepository.can_view_users_projects(current_user.get("user_id"), [user_id], db):
+                raise ManagedUserRequiredError("You cannot revoke projects from a user you do not manage")
+
+        AssignmentRepository.revoke_projects_from_user(user_id, projects, current_user, db)
+
 
     @staticmethod
-    def deassign_roles(
-        data: AssignmentSchema.RoleAssignmentRequest,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if not UserRepository.are_users_present(data.user_ids, db):
-            raise UserNotFoundError("One or more users not found")
-        AssignmentRepository.deassign_roles(data.user_ids, data.roles, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Roles successfully deassigned")
-
-    @staticmethod
-    def sync_users_to_project(
-        project_id: int,
-        data: AssignmentSchema.AssignUsersToProjectRequest,
-        current_user: dict,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
+    def add_users_to_project(project_id: int, users: list[int], current_user: dict, db: Session) -> None:
         if ProjectRepository.get_project_by_id(project_id, db) is None:
             raise ProjectNotFoundError()
-        if not UserRepository.are_users_present(data.user_ids, db):
-            raise UserNotFoundError("One or more users not found")
+        
+        if not UserRepository.are_users_present(users, db):
+            raise UserNotFoundError()
 
-        if "admin" not in current_user.get("user_roles", []):
-            manager_id = current_user["user_id"]
-            if not ProjectRepository.is_assigned([project_id], manager_id, db):
-                raise ProjectAssignmentRequiredError("Project is not assigned to current manager")
-            if not AssignmentRepository.are_users_managed_by(manager_id, data.user_ids, db):
-                raise ManagedUserRequiredError()
-
-        AssignmentRepository.sync_users_to_project(project_id, data.user_ids, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Users successfully synced to project")
+        AssignmentRepository.add_users_to_project(project_id, users, db)
 
     @staticmethod
-    def sync_projects_to_user(
-        user_id: int,
-        data: AssignmentSchema.AssignProjectsToUserRequest,
-        current_user: dict,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if UserRepository.get_user_by_id(user_id, db) is None:
+    def revoke_users_from_project(project_id: int, users: list[int], current_user: dict, db: Session) -> None:
+        if ProjectRepository.get_project_by_id(project_id, db) is None:
+            raise ProjectNotFoundError()
+        if not UserRepository.are_users_present(users, db):
             raise UserNotFoundError()
-        if not ProjectRepository.are_projects_present(data.project_ids, db):
-            raise ProjectNotFoundError("One or more projects not found")
-
-        if "admin" not in current_user.get("user_roles", []):
-            manager_id = current_user["user_id"]
-            if not AssignmentRepository.are_users_managed_by(manager_id, [user_id], db):
-                raise ManagedUserRequiredError("User does not belong to current manager")
-            if not ProjectRepository.is_assigned(data.project_ids, manager_id, db):
-                raise ProjectAssignmentRequiredError("One or more projects are not assigned to current manager")
-
-        AssignmentRepository.sync_projects_to_user(user_id, data.project_ids, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Projects successfully synced to user")
-
-    @staticmethod
-    def sync_roles_to_user(
-        user_id: int,
-        data: AssignmentSchema.AssignRolesToUserRequest,
-        db: Session,
-    ) -> AssignmentSchema.AssignmentMessageResponse:
-        if UserRepository.get_user_by_id(user_id, db) is None:
-            raise UserNotFoundError()
-        AssignmentRepository.sync_roles_to_user(user_id, data.roles, db)
-        return AssignmentSchema.AssignmentMessageResponse(message="Roles successfully synced to user")
-
+        
+        AssignmentRepository.revoke_users_from_project(project_id, users, db)

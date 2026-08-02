@@ -8,22 +8,11 @@ from app.models.ProjectAssignmentModel import ProjectAssignment
 class ProjectRepository:
 
     @staticmethod
-    def get_user_projects(user_id: int, db: Session) -> list[Project]:
-        return (
-            db.query(Project)
-            .join(ProjectAssignment, Project.id == ProjectAssignment.project_id)
-            .filter(
-                ProjectAssignment.user_id == user_id,
-                ProjectAssignment.is_assigned.is_(True),
-            )
-            .all()
-        )
-
-    @staticmethod
-    def is_assigned(project_ids: list[int], user_id: int, db: Session) -> bool:
+    def are_projects_assigned(project_ids: list[int], user_id: int, db: Session) -> bool:
         return db.query(ProjectAssignment).filter(
             ProjectAssignment.project_id.in_(project_ids), 
-            ProjectAssignment.user_id == user_id
+            ProjectAssignment.user_id == user_id,
+            ProjectAssignment.is_assigned.is_(True)
         ).count() == len(project_ids)
 
     @staticmethod

@@ -1,5 +1,6 @@
 from typing import List
 
+from app.models.RoleModel import RoleEnum as RE
 import app.schemas.TaskSchema as TaskSchema
 from app.repositories.TaskRepository import TaskRepository
 from app.repositories.ProjectRepository import ProjectRepository
@@ -18,8 +19,8 @@ class TaskService:
         if ProjectRepository.get_project_by_id(project_id, db) is None:
             raise ProjectNotFoundError()
 
-        if "admin" not in current_user.get("user_roles", []):
-            assigned = ProjectRepository.is_assigned(
+        if RE.ADMIN not in current_user.get("user_roles", []):
+            assigned = ProjectRepository.are_projects_assigned(
                 [project_id], current_user["user_id"], db
             )
             if not assigned:
@@ -39,8 +40,8 @@ class TaskService:
         task = TaskRepository.get_task(task_id, db)
         if not task:
             raise TaskNotFoundError()
-        if "manager" in current_user.get("user_roles", []):
-            assigned = ProjectRepository.is_assigned(
+        if RE.MANAGER in current_user.get("user_roles", []):
+            assigned = ProjectRepository.are_projects_assigned(
                 [task.project_id], current_user["user_id"], db
             )
             if not assigned:
@@ -59,8 +60,8 @@ class TaskService:
         task = TaskRepository.get_task(task_id, db)
         if not task:
             raise TaskNotFoundError()
-        if "admin" not in current_user.get("user_roles", []):
-            assigned = ProjectRepository.is_assigned(
+        if RE.ADMIN not in current_user.get("user_roles", []):
+            assigned = ProjectRepository.are_projects_assigned(
                 [task.project_id], current_user["user_id"], db
             )
             if not assigned:

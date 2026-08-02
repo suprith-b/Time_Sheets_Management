@@ -13,5 +13,5 @@ class User(Base):
     userid = Column( String( 10 ), unique=True )
     name = Column(String(80))
     company_mail = Column(String(50), unique=True)
-    personal_mail = Column(String(50), unique=True)
+    phone_number = Column(String(50), unique=True)
     is_alive = Column("isAlive", Boolean, default=True, server_default=text("1"), nullable=False)

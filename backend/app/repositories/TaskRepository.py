@@ -1,11 +1,20 @@
+from ast import List
+from sqlite3 import DatabaseError
+
+from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
+from app.models.RoleModel import RoleEnum as RE
 from app.models.TaskModel import Task
 from app.models.ProjectAssignmentModel import ProjectAssignment
 import app.schemas.TaskSchema as TaskSchema
 
 class TaskRepository:
 
+    @staticmethod
+    def get_task_count(project_id: int, db: Session) -> int:
+        return db.query(Task).filter(Task.project_id == project_id, Task.is_alive.is_(True)).count()
+    
     @staticmethod
     def create_task(
         project_id: int,
@@ -22,6 +31,25 @@ class TaskRepository:
         db.commit()
         db.refresh(task)
         return task
+
+    @staticmethod
+    def create_tasks(
+        project_id: int,
+        data: list[TaskSchema.TaskCreateRequest],
+        db: Session,
+    ) -> None:
+        tasks = [
+            {
+                "project_id": project_id,
+                "name": task.name,
+                "description": task.description,
+                "is_alive": True,
+            }
+            for task in data
+        ]
+        if tasks:
+            db.execute( insert( Task ).values(tasks) )
+            db.commit()
 
     @staticmethod
     def get_task(task_id: int, db: Session) -> Task | None:
@@ -56,7 +84,7 @@ class TaskRepository:
             .filter(Task.is_alive.in_(is_alive_filters))
         )
         
-        if "admin" not in current_user.get("user_roles", []):
+        if RE.ADMIN not in current_user.get("user_roles", []):
             query = (
                 query.join(
                     ProjectAssignment,

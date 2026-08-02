@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user
+from app.models.RoleModel import RoleEnum as RE
 from app.models.TimeLogModel import TypeEnum
 import app.schemas.AnalyticsSchema as AnalyticsSchema
 from app.services.AnalyticsService import AnalyticsService
@@ -26,7 +27,7 @@ def get_reports(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
     return AnalyticsService.get_reports(
         as_role=as_role,
         start_date=start_date,

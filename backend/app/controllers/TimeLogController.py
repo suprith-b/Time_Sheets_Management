@@ -5,9 +5,13 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.TimeLogModel import TypeEnum
+from app.models.RoleModel import RoleEnum as RE
 import app.schemas.TimeLogSchema as TimeLogSchema
 from app.services.TimeLogService import TimeLogService
 from app.utils.RoleValidation import RoleValidation
+from app.core.exceptions import AccessDeniedError, InvalidTimeRangeError, TimeLogNotFoundError
+from app.repositories.TimeLogRepository import TimeLogRepository
+from app.repositories import AssignmentRepository
 
 router = APIRouter(prefix="/timelogs")
 
@@ -23,7 +27,7 @@ def create_time_logs(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "employee"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.EMPLOYEE])
     return TimeLogService.create_time_logs(user_id, data, current_user, db)
 
 
@@ -42,7 +46,8 @@ def get_user_timelogs(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager", "employee"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
+
     return TimeLogService.get_user_timelogs(
         user_id=user_id,
         project_ids=project_ids,
@@ -64,7 +69,7 @@ def get_user_timelog_hours(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager", "employee"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
 
     return TimeLogService.get_user_hours(
         user_id=user_id,
@@ -87,5 +92,14 @@ def update_timelog(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
+    timelog = TimeLogRepository.get_timelog_by_id(timelog_id, db)
+
+    if not timelog:
+        raise TimeLogNotFoundError()
+    
+    if not RE.ADMIN in current_user.get("user_roles", []):
+        if not AssignmentRepository.are_users_managed_by(current_user.get("user_id"), [timelog.user_id], db):
+            raise AccessDeniedError("You can only update time logs of users you manage.")
+
     return TimeLogService.update_timelog(timelog_id, data, db)

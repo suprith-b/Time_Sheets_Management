@@ -8,6 +8,7 @@ import app.schemas.UserSchema as UserSchema
 from app.services.UserService import UserService
 from app.utils.RoleValidation import RoleValidation
 from app.core.exceptions import AccessDeniedError
+from app.models.RoleModel import RoleEnum as RE
 
 router = APIRouter(prefix="/users")
 
@@ -20,21 +21,21 @@ def get_users(
     project_ids: list[int] | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    has_manager: list[ int] | None =  Query(default=[0]),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager"])
-    return UserService.get_users(current_user, roles, manager_id, is_alive, project_ids, db)
+    RoleValidation.validate_role(current_user, [ RE.ADMIN, RE.MANAGER])
+    has_manager = [ True if val == 1 else False for val in has_manager]
+    return UserService.get_users(current_user, roles, manager_id, is_alive, project_ids, has_manager, db)
 
 
-@router.get("/{user_id}", response_model=UserSchema.UserDetailResponse)
+@router.get("/{user_id}", response_model=UserSchema.UserResponse)
 def get_user_by_id(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin", "manager", "employee"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
     return UserService.get_user_by_id(user_id, current_user, db)
-
-
 
 
 @router.post("", response_model=UserSchema.CreateUserResponse, status_code=status.HTTP_201_CREATED)
@@ -43,7 +44,7 @@ def create_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
     return UserService.create_user(data, db)
 
 
@@ -54,7 +55,7 @@ def edit_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
     return UserService.edit_user(user_id, data, db)
 
 
@@ -76,5 +77,5 @@ def delete_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, ["admin"])
+    RoleValidation.validate_role(current_user, [RE.ADMIN])
     return UserService.delete_user(user_id, db)

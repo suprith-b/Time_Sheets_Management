@@ -38,7 +38,7 @@ class TimeLogRepository:
 
     @staticmethod
     def is_valid_project_and_task(project_id: int, task_id: int, user_id: int, db: Session) -> bool:
-        if not ProjectRepository.is_assigned([project_id], user_id, db):
+        if not ProjectRepository.are_projects_assigned([project_id], user_id, db):
             return False
         task_exists = db.query(Task.id).filter(Task.id == task_id, Task.project_id == project_id).first() is not None
         return task_exists
