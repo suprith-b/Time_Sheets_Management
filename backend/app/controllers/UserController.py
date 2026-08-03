@@ -21,10 +21,13 @@ def get_users(
     project_ids: list[int] | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-    has_manager: list[ int] | None =  Query(default=[0]),
+    has_manager: list[ int] | None =  Query(default=None),
 ):
     RoleValidation.validate_role(current_user, [ RE.ADMIN, RE.MANAGER])
-    has_manager = [ True if val == 1 else False for val in has_manager]
+    if not has_manager:
+        has_manager = [ True, False ]
+    else:
+        has_manager = [ True if val == 1 else False for val in has_manager]
     return UserService.get_users(current_user, roles, manager_id, is_alive, project_ids, has_manager, db)
 
 

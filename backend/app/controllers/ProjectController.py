@@ -99,11 +99,20 @@ def get_projects(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    RoleValidation.validate_role(current_user, [RE.ADMIN])
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
+    if RE.ADMIN in current_user.get("user_roles", []):
+        return ProjectService.get_projects(
+            sort_by=sort_by,
+            sort_type=sort_type,
+            status_filters=status,
+            current_user=current_user,
+            db=db,
+        )
     return ProjectService.get_projects(
         sort_by=sort_by,
         sort_type=sort_type,
         status_filters=status,
         current_user=current_user,
-        db=db,
+        user_id=current_user[ "user_id" ],
+        db = db
     )

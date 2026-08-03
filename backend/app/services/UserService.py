@@ -1,3 +1,4 @@
+from app.repositories.AssignmentRepository import AssignmentRepository
 from app.repositories.ProjectRepository import ProjectRepository
 from sqlalchemy.orm import Session
 
@@ -28,7 +29,10 @@ class UserService:
         if project_ids is not None and RE.ADMIN not in current_user.get("user_roles"):
             if not ProjectRepository.are_projects_assigned( project_ids, current_user.get("user_id"), db):
                 raise ProjectAssignmentRequiredError()
-                
+        
+        if has_manager is None:
+            has_manager = [ True, False ]
+        
         users_data = UserRepository.get_users(db, roles, manager_id, is_alive, project_ids, has_manager, current_user)
         return [UserSchema.UserResponse(**u) for u in users_data]
 
@@ -40,14 +44,21 @@ class UserService:
         if RE.ADMIN not in user_roles and RE.MANAGER not in user_roles:
             if user_id != current_user_id:
                 raise AccessDeniedError()
-
+        
         user_data = UserRepository.get_user_by_id(user_id, db)
         if not user_data:
             raise UserNotFoundError()
-
-        if RE.ADMIN not in user_roles and RE.MANAGER in user_roles:
-            if user_id != current_user_id and user_data["manager_id"] != current_user_id:
-                raise AccessDeniedError()
+        
+        if RE.ADMIN in user_roles:
+            pass
+        elif current_user_id == user_id:
+            pass
+        elif AssignmentRepository.can_view_users_projects(current_user_id, [ user_id ], db):
+            pass
+        elif user_data[ "user" ].manager_id is None:
+            pass
+        else:
+            raise AccessDeniedError()
 
         return UserSchema.UserResponse(**user_data["user"]._mapping, roles=user_data["roles"])
 

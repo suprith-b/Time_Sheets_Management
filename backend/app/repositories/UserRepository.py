@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session, aliased
 
 from app.models.PasswordModel import Password
@@ -84,11 +84,13 @@ class UserRepository:
             .join(Role, RoleAssignment.role_id == Role.id)
             .outerjoin(Password, User.id == Password.user_id)
             .outerjoin(ManagerUser, User.manager_id == ManagerUser.id)
-            .filter(Role.role.in_(roles))
             .filter(RoleAssignment.is_assigned.is_(True))
             .filter(User.is_alive.in_([bool(x) for x in is_alive]))
         )
 
+        if roles is not None:
+            query = query.filter(Role.role.in_(roles))
+        
         if project_ids:
             project_users_subquery = (
                 select(ProjectAssignment.user_id)
@@ -105,7 +107,10 @@ class UserRepository:
         elif not False in has_manager:
             query = query.filter(User.manager_id.is_not(None))
         if manager_id is not None:
-            query = query.filter(User.manager_id == manager_id)
+            if False in has_manager:
+                query = query.filter( or_( User.manager_id == manager_id, User.manager_id.is_(None)))
+            else:
+                query = query.filter(User.manager_id == manager_id)
         rows = query.all()
 
         users_map = {}

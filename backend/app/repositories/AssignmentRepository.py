@@ -132,7 +132,7 @@ class AssignmentRepository:
         db.commit()
 
     @staticmethod
-    def add_users_to_projects(project_id: int, user_ids: list[int], db: Session) -> None:
+    def add_users_to_project(project_id: int, user_ids: list[int], db: Session) -> None:
         if not user_ids:
             return
 
@@ -193,6 +193,7 @@ class AssignmentRepository:
                 User.id.in_(user_ids),
                 or_(
                     User.manager_id == manager_id,
+                    User.manager_id.is_( None ),
                     ManagerAssignment.user_id.isnot(None),
                 ),
             )
