@@ -1,0 +1,26 @@
+{
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && .\\venv\\Scripts\\activate && python -m uvicorn app.main:app --reload",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  },
+  "name": "timesheets_v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suprith-b/Time_Sheets_Management.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/suprith-b/Time_Sheets_Management/issues"
+  },
+  "homepage": "https://github.com/suprith-b/Time_Sheets_Management#readme"
+}
