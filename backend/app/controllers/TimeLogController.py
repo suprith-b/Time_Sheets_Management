@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -41,6 +41,8 @@ def get_user_timelogs(
     start_date: datetime | None = Query(default=datetime(1970, 1, 1)),
     end_date: datetime | None = Query(default_factory=datetime.now),
     type: list[TypeEnum] | None = Query(default=None),
+    page: int | None = Query( default = None ),
+    page_size: int | None = Query( default = None ),
     sort_by: str = Query(default="start_time"),
     sort_type: int = Query(default=-1),
     db: Session = Depends(get_db),
@@ -56,6 +58,8 @@ def get_user_timelogs(
         type_filters=type,
         sort_by=sort_by,
         sort_type=sort_type,
+        page = page,
+        page_size = page_size,
         current_user=current_user,
         db=db,
     )

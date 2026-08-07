@@ -1,14 +1,14 @@
-import React from 'react';
+import { useState, React } from 'react';
 import { Table, Badge, Button, Text, Group } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { RoleEnum } from '../utils/constants';
 
-const EmployeeTable = ({ employees, onToggleStatus }) => {
+const EmployeeTable = ({ employees, onToggleStatus, setShowTimeLogs }) => {
   const navigate = useNavigate();
   const { isOneOfRoles } = useAuth();
   const isAdmin = isOneOfRoles([RoleEnum.ADMIN]);
-
+  const isManager = isOneOfRoles([ RoleEnum.MANAGER ] );
   const rows = employees.map((emp) => (
     <Table.Tr
       key={emp.id}
@@ -45,32 +45,47 @@ const EmployeeTable = ({ employees, onToggleStatus }) => {
           </Badge>
         )}
       </Table.Td>
+      { ( isAdmin || isManager ) && (
+        <Table.Td>
+          <Button
+            size="xs"
+            variant="light"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              navigate(`/timelogs/${emp.id}`)
+            } }
+          >
+          </Button>
+        </Table.Td>
+      )}
     </Table.Tr>
   ));
 
   return (
-    <Table highlightOnHover withTableBorder>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>User ID</Table.Th>
-          <Table.Th>Name</Table.Th>
-          <Table.Th>Manager</Table.Th>
-          <Table.Th>Roles</Table.Th>
-          <Table.Th>Status</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {rows.length > 0 ? (
-          rows
-        ) : (
+    <>
+      <Table highlightOnHover withTableBorder>
+        <Table.Thead>
           <Table.Tr>
-            <Table.Td colSpan={5} align="center">
-              No employees found
-            </Table.Td>
+            <Table.Th>User ID</Table.Th>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Manager</Table.Th>
+            <Table.Th>Roles</Table.Th>
+            <Table.Th>Status</Table.Th>
           </Table.Tr>
-        )}
-      </Table.Tbody>
-    </Table>
+        </Table.Thead>
+        <Table.Tbody>
+          {rows.length > 0 ? (
+            rows
+          ) : (
+            <Table.Tr>
+              <Table.Td colSpan={5} align="center">
+                No employees found
+              </Table.Td>
+            </Table.Tr>
+          )}
+        </Table.Tbody>
+      </Table>
+    </>
   );
 };
 

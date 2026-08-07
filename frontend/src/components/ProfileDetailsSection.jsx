@@ -148,7 +148,7 @@ const ProfileDetailsSection = ({
           <Grid.Col span={6}>
             <Select
               label="Manager"
-              placeholder="Select Manager"
+              placeholder="None"
               data={managerOptions}
               value={formData.manager_id ? String(formData.manager_id) : null}
               onChange={(val) => handleChange('manager_id', val ? Number(val) : null)}

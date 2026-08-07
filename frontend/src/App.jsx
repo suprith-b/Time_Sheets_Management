@@ -4,6 +4,7 @@ import AppHeader from './components/AppHeader';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
+import TimeLogsPage from './pages/TimeLogsPage';
 import EmployeesPage from './pages/EmployeesPage';
 import CreateEmployeePage from './pages/CreateEmployeePage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -12,6 +13,8 @@ import CreateProjectPage from './pages/CreateProjectPage';
 import ReportsPage from './pages/ReportsPage';
 import EnterTimesheetPage from './pages/EnterTimesheetPage';
 import { RoleEnum } from './utils/constants';
+import LogsSection from './components/LogsSection';
+import ProjectEmployeesPage from './pages/ProjectEmployeesPage';
 
 function App() {
   return (
@@ -22,6 +25,7 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/timelogs" element={<TimeLogsPage />} />
         </Route>
 
         <Route
@@ -38,13 +42,17 @@ function App() {
           <Route path="/projects/new" element={<CreateProjectPage />} />
         </Route>
 
+        <Route element={<ProtectedRoute allowedRoles={[RoleEnum.ADMIN, RoleEnum.MANAGER]} />}>
+          <Route path="/timelogs/:userIdParam" element={<LogsSection/>} />
+        </Route>
+
         <Route
           element={
             <ProtectedRoute
               allowedRoles={[RoleEnum.ADMIN, RoleEnum.MANAGER, RoleEnum.EMPLOYEE]}
-            />
-          }
-        >
+              />
+            }
+            >
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
         </Route>
@@ -53,19 +61,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[RoleEnum.ADMIN, RoleEnum.MANAGER]} />
           }
-        >
+          >
+          <Route path = "/projects/:projectId/employees" element={<ProjectEmployeesPage />} />
           <Route path="/reports" element={<ReportsPage />} />
         </Route>
+
 
         <Route
           element={
             <ProtectedRoute allowedRoles={[RoleEnum.EMPLOYEE, RoleEnum.ADMIN]} />
           }
-        >
+          >
           <Route path="/timesheet" element={<EnterTimesheetPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/profile" replace />} />
+        <Route path="*" element={<Navigate to="/timesheet" replace />} />
+
       </Routes>
     </>
   );

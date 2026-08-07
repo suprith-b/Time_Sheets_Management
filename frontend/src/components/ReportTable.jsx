@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Text } from '@mantine/core';
+import { Table, Text, Button } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { formatHours } from '../utils/formatters';
 
@@ -17,6 +17,17 @@ const ReportTable = ({ reports }) => {
       </Table.Td>
       <Table.Td>{rep.project_name}</Table.Td>
       <Table.Td>{formatHours(rep.hours)}</Table.Td>
+      <Table.Td>
+        <Button
+          size="xs"
+          variant="light"
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            navigate(`/timelogs/${rep.id}`)
+          } }
+        >
+        </Button>
+      </Table.Td>
     </Table.Tr>
   ));
 

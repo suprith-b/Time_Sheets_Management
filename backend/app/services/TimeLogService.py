@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.RoleModel import RoleEnum as RE
@@ -54,6 +54,7 @@ class TimeLogService:
         if RE.ADMIN not in user_roles:
             if current_user.get("user_id") != user_id:
                 raise AccessDeniedError("You do not have permission to perform this action")
+        
 
         for item in data.time_logs:
             if item.start_time > item.end_time:
@@ -71,6 +72,8 @@ class TimeLogService:
         start_date: datetime | None,
         end_date: datetime | None,
         type_filters: list[TypeEnum] | None,
+        page: int | None,
+        page_size: int | None,
         sort_by: str,
         sort_type: int,
         current_user: dict,
@@ -100,6 +103,8 @@ class TimeLogService:
             type_filters=type_filters,
             sort_by=sort_by,
             sort_type=sort_type,
+            page = page,
+            page_size = page_size,
             db=db,
         )
         return [TimeLogSchema.TimeLogDetailResponse.model_validate(r) for r in rows]

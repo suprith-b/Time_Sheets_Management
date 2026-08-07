@@ -31,6 +31,7 @@ const CountMultiSelect = ({
   value = [],
   onChange,
   searchable = false,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -53,6 +54,7 @@ const CountMultiSelect = ({
     : data;
 
   const toggle = (val) => {
+    if (disabled) return;
     if (value.includes(val)) {
       onChange(value.filter((v) => v !== val));
     } else {
@@ -60,21 +62,27 @@ const CountMultiSelect = ({
     }
   };
 
+  const selectedItem =
+    value.length === 1 ? data.find((d) => d.value === value[0]) : null;
+
   const triggerLabel =
     value.length === 0
       ? placeholder
+      : value.length === 1 && selectedItem
+      ? selectedItem.label
       : `${value.length} selected`;
 
   return (
     <Box style={{ position: 'relative', flex: 1 }} ref={ref}>
       {label && (
-        <Text size="sm" fw={500} mb={4}>
+        <Text size="sm" fw={500} mb={4} c={disabled ? 'dimmed' : undefined}>
           {label}
         </Text>
       )}
 
       <UnstyledButton
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => !disabled && setOpen((o) => !o)}
+        disabled={disabled}
         style={{
           width: '100%',
           border: '1px solid var(--mantine-color-gray-4)',
@@ -83,17 +91,20 @@ const CountMultiSelect = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: 'var(--mantine-color-white)',
-          cursor: 'pointer',
+          backgroundColor: disabled
+            ? 'var(--mantine-color-gray-1)'
+            : 'var(--mantine-color-white)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
         }}
       >
-        <Text size="sm" c={value.length === 0 ? 'dimmed' : 'dark'}>
+        <Text size="sm" c={disabled ? 'dimmed' : value.length === 0 ? 'dimmed' : 'dark'}>
           {triggerLabel}
         </Text>
         <IconChevronDown size={14} />
       </UnstyledButton>
 
-      {open && (
+      {open && !disabled && (
         <Paper
           shadow="md"
           withBorder

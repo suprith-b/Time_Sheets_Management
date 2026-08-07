@@ -1,11 +1,55 @@
+from app.models.RoleAssignmentModel import RoleAssignment
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.models.ProjectModel import Project, StatusEnum
 import app.schemas.ProjectSchema as ProjectSchema
 from app.models.ProjectAssignmentModel import ProjectAssignment
+from app.models.UserModel import User
+from app.models.RoleModel import RoleEnum as RE, Role
 
 class ProjectRepository:
+
+    @staticmethod
+    def get_project_unassigned_users(
+        project_id: int,
+        current_user: dict,
+        assigned_users: list[int],
+        page: int | None,
+        page_size: int | None,
+        db: Session
+    ) -> list[Project] | None:
+        role_id_of_employee_role = db.query(Role.id).filter(
+            Role.role == RE.EMPLOYEE
+        ).first()
+        if not role_id_of_employee_role:
+            raise Exception("Employee role not found")
+        role_id_of_employee_role = role_id_of_employee_role.id
+
+        query = db.query(
+            User
+        ).join( 
+            RoleAssignment, User.id == RoleAssignment.user_id 
+        ).filter(
+            RoleAssignment.role_id == role_id_of_employee_role,
+            User.id.notin_(assigned_users),
+            User.is_alive.is_(True)
+        )
+        if RE.ADMIN not in current_user[ "user_roles" ]:
+            query = query.filter(
+                or_(
+                    User.manager_id.is_(None),
+                    User.manager_id == current_user[ "user_id" ]
+                )
+            )
+            
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
+
+        return query.all()
+            
 
     @staticmethod
     def are_projects_assigned(project_ids: list[int], user_id: int, db: Session) -> bool:
@@ -64,6 +108,8 @@ class ProjectRepository:
         sort_type: int,
         status_filters: list[StatusEnum],
         db: Session,
+        page: int | None,
+        page_size: int | None,
         user_id: Optional[int] = None
     ) -> list[Project] | None:
         query = (
@@ -77,12 +123,16 @@ class ProjectRepository:
                 Project.id == ProjectAssignment.project_id
             ).filter(
                 ProjectAssignment.user_id == user_id, 
-                ProjectAssignment.is_assigned
+                ProjectAssignment.is_assigned.is_( True )
             )
         
         sort_column = getattr(Project, sort_by, Project.duration)
         if sort_type == -1:
             sort_column = sort_column.desc()
         query = query.order_by(sort_column)
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
+        print( "\n\n\n\n\n\n\n\n\n\n\n\n\n", query.all() )
         return query.all()
 

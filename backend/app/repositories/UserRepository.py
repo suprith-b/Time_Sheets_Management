@@ -64,6 +64,8 @@ class UserRepository:
         project_ids: list[int] | None,
         has_manager: list[ bool ],
         current_user: dict,
+        page: int | None,
+        page_size: int | None,
     ):
         ManagerUser = aliased(User)
         query = (
@@ -111,6 +113,9 @@ class UserRepository:
                 query = query.filter( or_( User.manager_id == manager_id, User.manager_id.is_(None)))
             else:
                 query = query.filter(User.manager_id == manager_id)
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
         rows = query.all()
 
         users_map = {}
@@ -138,6 +143,14 @@ class UserRepository:
     def create_user(data: UserSchema.CreateUserRequest, db: Session):
         if data.manager_id is not None and not UserRepository.check_users_role([data.manager_id], RE.MANAGER, db):
             raise UserNotFoundError("Manager not found")
+        if db.query( User ).filter( User.userid == data.userid ).first() is not None:
+            raise RepeatedDataError("User with this userid already exists")
+        if db.query( User ).filter( User.company_mail == data.company_mail ).first() is not None:
+            raise RepeatedDataError("User with this company mail already exists")
+        if db.query( User ).filter( User.phone_number == data.phone_number ).first() is not None:
+            raise RepeatedDataError("User with this phone number already exists")
+        if db.query( Password ).filter( Password.username == data.username ).first() is not None:
+            raise RepeatedDataError("Username already exists (even with inactive users)")
         user = User(
             name=data.name,
             userid=data.userid,
@@ -156,8 +169,9 @@ class UserRepository:
                     password=hash_password(data.password)
                 )
             )
-        except:
+        except Exception as e:
             db.rollback()
+            print( "error: \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", e )
             raise RepeatedDataError()
         
         if data.roles is None:
@@ -179,7 +193,7 @@ class UserRepository:
         for key, value in data.model_dump(exclude_unset=True).items():
             if key == "is_alive":
                 user.is_alive = True if value == 1 else False
-            elif key == "manager_id":
+            elif key == "manager_id" and value is not None:
                 if not UserRepository.check_users_role([value], RE.MANAGER, db):
                     raise UserNotFoundError("Manager with the given ID does not exist.")
                 user.manager_id = value

@@ -60,10 +60,14 @@ def get_tasks(
     is_alive: Optional[List[int]] = Query(default=[1]),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
+    page: int | None = Query( default = None ),
+    page_size: int | None = Query( default = None ),
 ):
     return TaskService.get_tasks(
         project_id=project_id,
         is_alive=is_alive,
         current_user=current_user,
+        page = page,
+        page_size = page_size,
         db=db,
     )

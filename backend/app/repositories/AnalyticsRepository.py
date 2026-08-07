@@ -12,7 +12,7 @@ class AnalyticsRepository:
 
     @staticmethod
     def get_report_data(
-        as_role: str,
+        view_as: list[ RE ],
         start_date: datetime,
         end_date: datetime,
         project_ids: list[int] | None,
@@ -41,9 +41,6 @@ class AnalyticsRepository:
             .filter(TimeLog.start_time <= end_date)
         )
 
-        if as_role != RE.ADMIN:
-            query = query.filter(User.manager_id == current_user_id)
-
         if project_ids:
             query = query.filter(TimeLog.project_id.in_(project_ids))
 
@@ -65,5 +62,10 @@ class AnalyticsRepository:
             sort_column = sort_column.asc()
 
         query = query.order_by(sort_column)
+
+        if not RE.ADMIN in view_as:
+            query = query.filter(User.manager_id == current_user_id)
+        if not RE.MANAGER in view_as:
+            query = query.filter( User.id == current_user_id)
 
         return query.all()

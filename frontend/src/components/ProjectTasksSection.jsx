@@ -75,7 +75,7 @@ const ProjectTasksSection = ({
   };
 
   return (
-    <Paper p="md" withBorder mt="md">
+    <Paper p="md" withBorder mt="md" h="100%">
       <Group justify="space-between" mb="md">
         <Title order={4}>Tasks</Title>
         <Group>

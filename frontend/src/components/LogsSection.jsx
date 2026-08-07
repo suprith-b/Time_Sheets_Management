@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Group, Select, Table, Badge, Text } from '@mantine/core';
+import { Paper, Group, Select, Table, Badge, Text, ActionIcon, Tooltip, Title, Container } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
 import { timelogService } from '../services/timelogService';
 import { projectService } from '../services/projectService';
-import { TIMELOG_TYPE_OPTIONS, SORT_ORDER_OPTIONS } from '../utils/constants';
+import { TIMELOG_TYPE_OPTIONS } from '../utils/constants';
 import { formatDateTime } from '../utils/formatters';
 import CountMultiSelect from './CountMultiSelect';
+import { useParams } from 'react-router-dom';
+import { userService } from '../services/userService';
 
 const LOG_SORT_BY_OPTIONS = [
   { value: 'start_time', label: 'Start Time' },
   { value: 'duration', label: 'Duration' },
 ];
 
-const ProfileLogsSection = ({ userId }) => {
+const LogsSection = ({ userId }) => {
   const [logs, setLogs] = useState([]);
   const [userProjects, setUserProjects] = useState([]);
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -22,6 +25,19 @@ const ProfileLogsSection = ({ userId }) => {
   const [sortBy, setSortBy] = useState('start_time');
   const [sortType, setSortType] = useState(-1);
   const [loading, setLoading] = useState(false);
+  const [ user, setUser ] = useState( null );
+
+  const isDescending = Number(sortType) === -1;
+
+
+  const { userIdParam } = useParams();
+
+  useEffect(() => {
+    if (userIdParam) {
+      userId = userIdParam;
+      loadUser();
+    }
+  }, [userIdParam]);
 
   useEffect(() => {
     projectService.fetchUserProjects(userId).then(setUserProjects).catch(console.error);
@@ -46,6 +62,19 @@ const ProfileLogsSection = ({ userId }) => {
     }
   };
 
+  const loadUser = async () => {
+    setLoading( true );
+    try{
+      const user = await userService.getUserById(userId);
+      setUser(user);
+    }catch(err){
+      console.error('Failed to load user:', err);
+    }finally{
+      setLoading(false);
+    }
+  }
+
+
   useEffect(() => {
     loadLogs();
   }, [userId, selectedProjects, selectedTypes, startDate, endDate, sortBy, sortType]);
@@ -56,7 +85,11 @@ const ProfileLogsSection = ({ userId }) => {
   }));
 
   return (
-    <div>
+    <Container size="lg" py="xl">
+      {user &&
+         <Title order={2} mb="lg">
+          TimeLogs: {user.name}
+        </Title>}
       <Paper p="md" withBorder mb="md">
         <Group grow align="flex-end">
           <CountMultiSelect
@@ -90,19 +123,30 @@ const ProfileLogsSection = ({ userId }) => {
           />
         </Group>
 
-        <Group grow align="flex-end" mt="md">
+        <Group gap="xs" align="flex-end" mt="md">
           <Select
             label="Sort By"
             data={LOG_SORT_BY_OPTIONS}
             value={sortBy}
             onChange={setSortBy}
+            style={{ width: 220 }}
           />
-          <Select
-            label="Sort Order"
-            data={SORT_ORDER_OPTIONS}
-            value={String(sortType)}
-            onChange={(val) => setSortType(Number(val))}
-          />
+          <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
+            <ActionIcon
+              variant="light"
+              color={isDescending ? 'red' : 'blue'}
+              size={36}
+              radius="sm"
+              onClick={() => setSortType(isDescending ? 1 : -1)}
+              aria-label="Toggle Sort Order"
+            >
+              {isDescending ? (
+                <IconArrowDown size={20} />
+              ) : (
+                <IconArrowUp size={20} />
+              )}
+            </ActionIcon>
+          </Tooltip>
         </Group>
       </Paper>
 
@@ -144,8 +188,8 @@ const ProfileLogsSection = ({ userId }) => {
           )}
         </Table.Tbody>
       </Table>
-    </div>
+    </Container>
   );
 };
 
-export default ProfileLogsSection;
+export default LogsSection;

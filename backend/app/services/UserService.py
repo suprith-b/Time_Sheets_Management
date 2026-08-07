@@ -7,6 +7,12 @@ from app.models.RoleModel import RoleEnum as RE
 from app.repositories.UserRepository import UserRepository
 import app.schemas.UserSchema as UserSchema
 
+from email.message import EmailMessage
+import smtplib
+
+from app.core.config import settings
+
+
 
 class UserService:
 
@@ -18,6 +24,8 @@ class UserService:
         is_alive: list[int],
         project_ids: list[int] | None,
         has_manager: list[ bool ],
+        page: int | None,
+        page_size: int | None,
         db: Session,
     ):
         if RE.ADMIN not in current_user.get("user_roles"):
@@ -33,7 +41,7 @@ class UserService:
         if has_manager is None:
             has_manager = [ True, False ]
         
-        users_data = UserRepository.get_users(db, roles, manager_id, is_alive, project_ids, has_manager, current_user)
+        users_data = UserRepository.get_users(db, roles, manager_id, is_alive, project_ids, has_manager, current_user, page, page_size )
         return [UserSchema.UserResponse(**u) for u in users_data]
 
     @staticmethod
@@ -66,6 +74,7 @@ class UserService:
 
     @staticmethod
     def create_user(data: UserSchema.CreateUserRequest, db: Session):
+        data.password = "abc123"
         user = UserRepository.create_user(data, db)
         roles = [r.value for r in data.roles] if data.roles else [RE.EMPLOYEE.value]
         return UserSchema.CreateUserResponse(
@@ -75,7 +84,7 @@ class UserService:
             username=data.username,
             phone_number=user.phone_number,
             company_mail=user.company_mail,
-            password=data.password,
+            password = data.password,
             roles=roles,
             manager_id=user.manager_id,
             manager_name=UserRepository.get_user_by_id(user.manager_id, db)['user'].name if user.manager_id else None
@@ -113,3 +122,20 @@ class UserService:
         if not user:
             raise UserNotFoundError()
         return {"message": "User soft deleted successfully"}
+
+    @staticmethod
+    def send_email(to_email: str, subject: str, body: str):
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = settings.GMAIL_ID
+        msg["To"] = to_email
+        msg.set_content(body)
+        msg.add_alternative(body, subtype = "html" )
+
+        APP_PASSWORD = settings.GMAIL_APP_PASSWORD
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+                smtp.login(settings.GMAIL_ID, APP_PASSWORD)
+                smtp.send_message(msg)
+        except Exception as e:
+            print( "error:\n\n\n\n\n\n\n\n\n\n", e )

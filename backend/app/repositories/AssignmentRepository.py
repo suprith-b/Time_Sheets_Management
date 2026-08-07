@@ -84,42 +84,7 @@ class AssignmentRepository:
         for row in rows:
             row.is_assigned = False
         db.commit()
-
-    @staticmethod
-    def add_projects_to_user(user_id: int, project_ids: list[int], current_user: dict, db: Session) -> None:
-        if not project_ids:
-            return
-
-        existing_rows = (
-            db.query(ProjectAssignment)
-            .filter(ProjectAssignment.user_id == user_id)
-            .all()
-        )
-        existing_project_ids = {row.project_id for row in existing_rows}
-
-        for row in existing_rows:
-            row.is_assigned = True
-
-        missing = [
-            {"user_id": user_id, "project_id": project_id, "is_assigned": True}
-            for project_id in project_ids
-            if project_id not in existing_project_ids
-        ]
-        if missing:
-            db.execute(insert(ProjectAssignment).values(missing))
-        db.commit()
-
-    @staticmethod
-    def revoke_projects_from_user(user_id: int, project_ids: list[int], current_user: dict, db: Session) -> None:
-        if not project_ids:
-            return
         
-        db.query(ProjectAssignment).filter(
-            ProjectAssignment.user_id == user_id,
-            ProjectAssignment.project_id.in_(project_ids)
-        ).update({"is_assigned": False}, synchronize_session=False)
-        db.commit()
-
     @staticmethod
     def revoke_users_from_project(project_id: int, user_ids: list[int], db: Session) -> None:
         if not user_ids:

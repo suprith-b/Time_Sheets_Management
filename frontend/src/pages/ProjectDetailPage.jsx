@@ -15,11 +15,10 @@ import {
 import { DateInput } from '@mantine/dates';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
-import { RoleEnum, STATUS_OPTIONS } from '../utils/constants';
+import { RoleEnum, STATUS_OPTIONS, STATUS_OPTIONS_FOR_MANAGER } from '../utils/constants';
 import { projectService } from '../services/projectService';
 import { userService } from '../services/userService';
 import ProjectTasksSection from '../components/ProjectTasksSection';
-import ProjectMembersSection from '../components/ProjectMembersSection';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams();
@@ -120,6 +119,9 @@ const ProjectDetailPage = () => {
     <Container size="lg" py="xl">
       <Group justify="space-between" mb="lg">
         <Title order={2}>Project: {project.name}</Title>
+        <Button variant="light" onClick={() => navigate(`/projects/${projectId}/employees`)}>
+          Manage Employees
+        </Button>
         <Button variant="default" onClick={() => navigate('/projects')}>
           Back to Projects
         </Button>
@@ -138,14 +140,14 @@ const ProjectDetailPage = () => {
               label="Project Name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              disabled={!canManage}
+              disabled={!isAdmin}
             />
           </Grid.Col>
 
           <Grid.Col span={6}>
             <Select
               label="Status"
-              data={STATUS_OPTIONS}
+              data={isAdmin ? STATUS_OPTIONS : STATUS_OPTIONS_FOR_MANAGER}
               value={formData.status}
               onChange={(val) => setFormData({ ...formData, status: val })}
               disabled={!canManage}
@@ -188,21 +190,12 @@ const ProjectDetailPage = () => {
           </Group>
         )}
       </Paper>
-
-      <ProjectTasksSection
-        projectId={Number(projectId)}
-        tasks={tasks}
-        canManage={canManage}
-        onTasksUpdated={loadData}
-      />
-
-      <ProjectMembersSection
-        projectId={Number(projectId)}
-        allEmployees={allEmployees}
-        assignedUserIds={assignedUserIds}
-        canManage={canManage}
-        onMembersUpdated={loadData}
-      />
+        <ProjectTasksSection
+          projectId={Number(projectId)}
+          tasks={tasks}
+          canManage={canManage}
+          onTasksUpdated={loadData}
+        />
     </Container>
   );
 };

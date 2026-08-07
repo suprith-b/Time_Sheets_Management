@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
-  Tabs,
   Title,
   Loader,
   Center,
@@ -13,7 +12,6 @@ import { userService } from '../services/userService';
 import { projectService } from '../services/projectService';
 import { RoleEnum } from '../utils/constants';
 import ProfileDetailsSection from '../components/ProfileDetailsSection';
-import ProfileLogsSection from '../components/ProfileLogsSection';
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -21,7 +19,6 @@ const ProfilePage = () => {
 
   const targetId = userId ? Number(userId) : currentUser?.id;
   const isAdmin = hasRole(RoleEnum.ADMIN);
-  const isSelf = !userId || Number(userId) === currentUser?.id;
 
   const [targetUser, setTargetUser] = useState(null);
   const [managersList, setManagersList] = useState([]);
@@ -41,7 +38,7 @@ const ProfilePage = () => {
 
       if (isAdmin) {
         const mgrs = await userService.fetchUsers({
-          roles: [RoleEnum.MANAGER, RoleEnum.ADMIN],
+          roles: [RoleEnum.MANAGER],
         });
         setManagersList(mgrs);
       }
@@ -72,35 +69,17 @@ const ProfilePage = () => {
     );
   }
 
-  const canSeeLogs = isSelf || isAdmin || hasRole(RoleEnum.MANAGER);
-
   return (
     <Container size="lg" py="xl">
       <Title order={2} mb="lg">
-        {isSelf ? 'My Profile' : targetUser.name}
+        {!userId || Number(userId) === currentUser?.id ? 'My Profile' : targetUser.name}
       </Title>
-
-      <Tabs defaultValue="details">
-        <Tabs.List mb="md">
-          <Tabs.Tab value="details">Details</Tabs.Tab>
-          {canSeeLogs && <Tabs.Tab value="logs">Time Logs</Tabs.Tab>}
-        </Tabs.List>
-
-        <Tabs.Panel value="details">
-          <ProfileDetailsSection
-            targetUser={targetUser}
-            userProjects={userProjects}
-            managersList={managersList}
-            onUpdateSuccess={loadProfile}
-          />
-        </Tabs.Panel>
-
-        {canSeeLogs && (
-          <Tabs.Panel value="logs">
-            <ProfileLogsSection userId={targetId} />
-          </Tabs.Panel>
-        )}
-      </Tabs>
+      <ProfileDetailsSection
+        targetUser={targetUser}
+        userProjects={userProjects}
+        managersList={managersList}
+        onUpdateSuccess={loadProfile}
+      />
     </Container>
   );
 };

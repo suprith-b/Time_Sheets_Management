@@ -77,6 +77,8 @@ class TaskRepository:
         is_alive_filters: list[bool],
         current_user: dict,
         db: Session,
+        page: int | None,
+        page_size: int | None,
     ) -> list[Task]:
         query = (
             db.query(Task)
@@ -93,5 +95,8 @@ class TaskRepository:
                 .filter(ProjectAssignment.user_id == current_user["user_id"])
                 .filter(ProjectAssignment.is_assigned.is_(True))
             )
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
         return query.order_by(Task.name.asc()).all()
 

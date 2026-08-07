@@ -24,9 +24,9 @@ class CreateUserRequest(BaseModel):
     name: str
     phone_number: str
     company_mail: str
-    password: str
     roles: list[RoleEnum] | None = None
     manager_id: int | None = None
+    password: str | None = None
 
 
 class CreateUserResponse(BaseModel):

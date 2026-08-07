@@ -15,7 +15,7 @@ const LoginPage = () => {
     setError('');
     try {
       await login(email, password);
-      navigate('/profile');
+      navigate('/timesheet');
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password');
     }

@@ -74,6 +74,8 @@ class TaskService:
         project_id: int,
         is_alive: List[int],
         current_user: dict,
+        page: int | None,
+        page_size: int | None,
         db,
     ) -> List[TaskSchema.TaskResponse]:
         bool_filters = [bool(v) for v in is_alive]
@@ -81,6 +83,8 @@ class TaskService:
             project_id=project_id,
             is_alive_filters=bool_filters,
             current_user=current_user,
+            page = page,
+            page_size = page_size,
             db=db,
         )
         return [TaskSchema.TaskResponse(**t.__dict__) for t in tasks]

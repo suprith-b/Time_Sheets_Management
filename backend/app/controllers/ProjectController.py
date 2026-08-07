@@ -1,3 +1,4 @@
+from app.schemas.UserSchema import UserResponse
 from fastapi import APIRouter, Depends, Query, status
 from typing import List, Optional
 from datetime import date
@@ -7,10 +8,12 @@ from app.db.database import get_db
 from app.models.RoleModel import RoleEnum as RE
 from sqlalchemy.orm import Session
 
+from app.models.ProjectModel import StatusEnum
+
 from app.utils.RoleValidation import RoleValidation
 import app.schemas.ProjectSchema as ProjectSchema
 from app.services.ProjectService import ProjectService
-from app.core.exceptions import AccessDeniedError
+from app.core.exceptions import AccessDeniedError, ArchivedProjectModificationError
 from app.repositories.AssignmentRepository import AssignmentRepository
 from app.repositories.ProjectRepository import ProjectRepository
 
@@ -48,6 +51,11 @@ def update_project(
     current_user: dict = Depends(get_current_user),
 ):
     RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
+    if not RE.ADMIN in current_user[ "user_roles" ] and not ProjectRepository.are_projects_assigned([project_id], current_user.get("user_id"), db):
+        raise AccessDeniedError("You are not assigned to this project")
+
+    if not RE.ADMIN in current_user[ "user_roles" ] and data.status == StatusEnum.ARCHIVED:
+        raise ArchivedProjectModificationError("You are not allowed to archive this project")
     return ProjectService.update_project(project_id, data, current_user, db)
 
 
@@ -57,6 +65,8 @@ def get_user_projects(
     sort_by: Optional[str] = Query(default="duration"),
     sort_type: int = Query(default=-1),
     status: Optional[List[str]] = Query(default=["in_progress"]),
+    page: int | None = Query( default = None ),
+    page_size: int | None = Query( default = None ),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -76,6 +86,8 @@ def get_user_projects(
         status_filters=status,
         current_user=current_user,
         user_id=user_id,
+        page_size = page_size,
+        page = page,
         db=db,
     )
 
@@ -87,7 +99,7 @@ def get_project(
     current_user: dict = Depends(get_current_user),
 ):
     RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER, RE.EMPLOYEE])
-    if not ProjectRepository.are_projects_assigned([project_id], current_user.get("user_id"), db):
+    if not RE.ADMIN in current_user[ "user_roles" ] and not ProjectRepository.are_projects_assigned([project_id], current_user.get("user_id"), db):
         raise AccessDeniedError("You are not assigned to this project")
     return ProjectService.get_project_by_id(project_id, db)
 
@@ -96,6 +108,8 @@ def get_projects(
     sort_by: Optional[str] = Query(default="duration"),
     sort_type: int = Query(default=-1),
     status: Optional[List[str]] = Query(default=["in_progress"]),
+    page: int | None = Query( default = None),
+    page_size: int | None = Query( default = None ),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -106,6 +120,8 @@ def get_projects(
             sort_type=sort_type,
             status_filters=status,
             current_user=current_user,
+            page_size = page_size,
+            page = page,
             db=db,
         )
     return ProjectService.get_projects(
@@ -114,5 +130,18 @@ def get_projects(
         status_filters=status,
         current_user=current_user,
         user_id=current_user[ "user_id" ],
+        page = page,
+        page_size = page_size,
         db = db
     )
+
+@router.get( "/{project_id}/unassigned/users", response_model=List[UserResponse])
+def get_project_unassigned_users( 
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+    page: int | None = Query( default = None),
+    page_size: int | None = Query( default = None )
+):
+    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
+    return ProjectService.get_project_unassigned_users(project_id, current_user, db, page, page_size)

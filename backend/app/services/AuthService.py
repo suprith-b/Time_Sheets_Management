@@ -1,3 +1,4 @@
+from app.core.exceptions import UserNotFoundError
 from jose import JWTError
 from app.core.config import settings
 from jose import jwt
@@ -18,7 +19,8 @@ class AuthService:
         if not result or not verify_password(data.password, result[ "pwd_entry" ].password ):
             raise InvalidCredentialsError()
         user, pwd_entry = result[ "user" ], result[ "pwd_entry" ]
-
+        if not user.is_alive:
+            raise InvalidCredentialsError()
         roles = UserRepository.get_user_roles(user.id, db)
 
         return AuthSchema.LoginResponse(
@@ -51,6 +53,8 @@ class AuthService:
             raise InvalidAuthenticationTokenError("Invalid token")
         
         user, roles = user_details[ "user" ], user_details[ "roles" ]
+        if not user.is_alive:
+            raise UserNotFoundError()
         return AuthSchema.LoginResponse(
             id=user.id,
             userid=str( user.userid ),

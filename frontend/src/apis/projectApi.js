@@ -30,4 +30,9 @@ export const projectApi = {
     const response = await axiosClient.delete(`/projects/${projectId}`);
     return response.data;
   },
+
+  getProjectUnassignedUsers: async (projectId) => {
+    const response = await axiosClient.get(`/projects/${projectId}/unassigned/users`);
+    return response.data;
+  },
 };

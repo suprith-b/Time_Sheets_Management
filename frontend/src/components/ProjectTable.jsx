@@ -2,13 +2,15 @@ import React from 'react';
 import { Table, Select, Text, Badge } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { RoleEnum, STATUS_OPTIONS } from '../utils/constants';
+import { RoleEnum, STATUS_OPTIONS, STATUS_OPTIONS_FOR_MANAGER } from '../utils/constants';
 import { formatDate } from '../utils/formatters';
 
 const ProjectTable = ({ projects, onStatusChange }) => {
   const navigate = useNavigate();
   const { isOneOfRoles } = useAuth();
   const canEditStatus = isOneOfRoles([RoleEnum.ADMIN, RoleEnum.MANAGER]);
+  const isAdmin = isOneOfRoles([RoleEnum.ADMIN]);
+  const isManager = isOneOfRoles( [ RoleEnum.MANAGER]);
 
   const rows = projects.map((p) => (
     <Table.Tr
@@ -26,7 +28,7 @@ const ProjectTable = ({ projects, onStatusChange }) => {
         {canEditStatus ? (
           <Select
             size="xs"
-            data={STATUS_OPTIONS}
+            data={isAdmin ? STATUS_OPTIONS : STATUS_OPTIONS_FOR_MANAGER}
             value={p.status}
             onChange={(val) => val && onStatusChange(p.id, val)}
             style={{ width: 140 }}

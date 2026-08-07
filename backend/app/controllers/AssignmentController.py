@@ -47,44 +47,6 @@ def update_manager_for_users(
     AssignmentService.assign_manager(manager_id, data.users, db)
     return {"manager_id": manager_id, "users": data.users}
 
-
-@router.post("/projects/add/to/user/{user_id}", status_code=status.HTTP_200_OK)
-def add_projects_to_user(
-    user_id: int,
-    data: AssignmentSchema.ProjectAssignmentRequest,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
-    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
-    if not RE.ADMIN in current_user.get("user_roles", []):
-        if not AssignmentRepository.are_users_managed_by(current_user.get("user_id"), [user_id], db):
-            raise AccessDeniedError("You cannot assign projects to a user you do not manage.")
-        
-        if not ProjectRepository.are_projects_assigned(data.projects, current_user.get("user_id"), db):
-            raise AccessDeniedError("You are not assigned to one or more specified projects.")
-        
-    AssignmentService.add_projects_to_user(user_id, data.projects, current_user, db)
-    return {"user_id": user_id, "projects": data.projects}
-
-@router.post("/projects/revoke/from/user/{user_id}", status_code=status.HTTP_200_OK)
-def revoke_projects_from_user(
-    user_id: int,
-    data: AssignmentSchema.ProjectAssignmentRequest,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
-    RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
-    if not RE.ADMIN in current_user.get("user_roles", []):
-        if not AssignmentRepository.can_view_users_projects(current_user.get("user_id"), [user_id], db):
-            raise AccessDeniedError("You cannot revoke projects from a user you do not manage.")
-        
-        if not ProjectRepository.are_projects_assigned(data.projects, current_user.get("user_id"), db):
-            raise AccessDeniedError("You are not assigned to one or more specified projects.")
-        
-    AssignmentService.revoke_projects_from_user(user_id, data.projects, current_user, db)
-    return {"user_id": user_id, "projects": data.projects}
-
-
 @router.post("/users/add/to/project/{project_id}", status_code=status.HTTP_200_OK)
 def add_users_to_project(
     project_id: int,

@@ -4,6 +4,8 @@ class Settings ( BaseSettings ):
     DB_URL : str
     JWT_SECRET: str
     JWT_ALGORITHM: str
+    GMAIL_APP_PASSWORD: str
+    GMAIL_ID: str
     
     model_config = SettingsConfigDict( 
         env_file = ".env",

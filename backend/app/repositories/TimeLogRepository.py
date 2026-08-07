@@ -70,6 +70,8 @@ class TimeLogRepository:
         start_date: datetime | None,
         end_date: datetime | None,
         type_filters: list[TypeEnum] | None,
+        page: int | None,
+        page_size: int | None,
         sort_by: str,
         sort_type: int,
         db: Session,
@@ -114,7 +116,9 @@ class TimeLogRepository:
             sort_column = sort_column.asc()
 
         query = query.order_by(sort_column)
-
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
         return query.all()
 
 

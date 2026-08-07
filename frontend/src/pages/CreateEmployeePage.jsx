@@ -24,7 +24,6 @@ const CreateEmployeePage = () => {
     name: '',
     company_mail: '',
     phone_number: '',
-    password: '',
     roles: [RoleEnum.EMPLOYEE],
     manager_id: null,
   });
@@ -35,7 +34,7 @@ const CreateEmployeePage = () => {
 
   useEffect(() => {
     userService
-      .fetchUsers({ roles: [RoleEnum.MANAGER, RoleEnum.ADMIN] })
+      .fetchUsers({ roles: [RoleEnum.MANAGER] })
       .then(setManagersList)
       .catch(console.error);
   }, []);
@@ -119,13 +118,6 @@ const CreateEmployeePage = () => {
               onChange={(e) => handleChange('phone_number', e.target.value)}
             />
 
-            <PasswordInput
-              label="Initial Password"
-              placeholder="Set password"
-              required
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-            />
 
             <MultiSelect
               label="Roles"

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { RoleEnum } from '../utils/constants';
 import EmployeeFilterBar from '../components/EmployeeFilterBar';
+import LogsSection from '../components/LogsSection';
 import EmployeeTable from '../components/EmployeeTable';
 import { userService } from '../services/userService';
 import { projectService } from '../services/projectService';
@@ -17,6 +18,8 @@ const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
   const [managersList, setManagersList] = useState([]);
   const [projectsList, setProjectsList] = useState([]);
+
+  const [ showTimeLogs, setShowTimeLogs ] = useState(null)
 
   const [search, setSearch] = useState('');
   const [roles, setRoles] = useState([]);
@@ -105,10 +108,10 @@ const EmployeesPage = () => {
         hasManager={hasManager}
         setHasManager={setHasManager}
       />
-
       <EmployeeTable
         employees={filteredEmployees}
         onToggleStatus={handleToggleStatus}
+        setShowTimeLogs={setShowTimeLogs}
       />
     </Container>
   );

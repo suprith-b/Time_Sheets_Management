@@ -123,6 +123,7 @@ const CreateProjectPage = () => {
                 label="End Date"
                 placeholder="End Date"
                 value={formData.end_date}
+                disabled={true}
                 onChange={(val) => setFormData({ ...formData, end_date: val })}
               />
             </Group>
@@ -130,7 +131,7 @@ const CreateProjectPage = () => {
             <div>
               <Group justify="space-between" mb="xs">
                 <Text fw={500} size="sm">
-                  Initial Tasks (Optional)
+                  Tasks (Optional)
                 </Text>
                 <Button
                   size="xs"
@@ -138,7 +139,7 @@ const CreateProjectPage = () => {
                   leftSection={<IconPlus size={14} />}
                   onClick={addTaskRow}
                 >
-                  Add Task Row
+                  Add Task
                 </Button>
               </Group>
 

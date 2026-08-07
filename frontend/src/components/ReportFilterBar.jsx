@@ -1,11 +1,13 @@
 import React from 'react';
-import { Group, Select, Paper } from '@mantine/core';
+import { Group, Select, Paper, ActionIcon, Box, Text, Tooltip } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
 import {
   TIMELOG_TYPE_OPTIONS,
-  SORT_ORDER_OPTIONS,
+  RoleEnum,
 } from '../utils/constants';
 import CountMultiSelect from './CountMultiSelect';
+import { useAuth } from './AuthContext';
 
 const REPORT_SORT_BY_OPTIONS = [
   { value: 'duration', label: 'Duration' },
@@ -14,11 +16,8 @@ const REPORT_SORT_BY_OPTIONS = [
 ];
 
 const ReportFilterBar = ({
-  roles,
-  setRoles,
-  managers,
-  setManagers,
-  managersList,
+  viewAs,
+  setViewAs,
   projects,
   setProjects,
   projectsList,
@@ -33,26 +32,40 @@ const ReportFilterBar = ({
   sortType,
   setSortType,
 }) => {
-  const managerOptions = managersList.map((m) => ({
-    value: String(m.id),
-    label: m.name,
-  }));
+  const { user: currentUser, hasRole } = useAuth();
+  const rawRoles = currentUser?.roles || [];
+  const normalizedRoles = rawRoles.map((r) => String(r).toLowerCase());
 
+  const hasAdmin =
+    (hasRole && hasRole(RoleEnum.ADMIN)) ||
+    normalizedRoles.includes('admin');
+  const hasManager =
+    (hasRole && hasRole(RoleEnum.MANAGER)) ||
+    normalizedRoles.includes('manager');
+
+  const viewAsOptions = [];
+  if (hasAdmin) {
+    viewAsOptions.push({ value: RoleEnum.ADMIN, label: 'ADMIN' });
+  }
+  if (hasManager) {
+    viewAsOptions.push({ value: RoleEnum.MANAGER, label: 'MANAGER' });
+  }
   const projectOptions = projectsList.map((p) => ({
     value: String(p.id),
     label: p.name,
   }));
 
+  const isDescending = Number(sortType) === -1;
+
   return (
     <Paper p="md" withBorder mb="md">
       <Group grow align="flex-end">
         <CountMultiSelect
-          label="Managers"
-          placeholder="Filter managers"
-          data={managerOptions}
-          value={managers}
-          onChange={setManagers}
-          searchable
+          label="View As"
+          placeholder="View As"
+          data={viewAsOptions}
+          value={viewAs}
+          onChange={setViewAs}
         />
         <CountMultiSelect
           label="Projects"
@@ -86,18 +99,31 @@ const ReportFilterBar = ({
           onChange={setEndDate}
           clearable
         />
-        <Select
-          label="Sort By"
-          data={REPORT_SORT_BY_OPTIONS}
-          value={sortBy}
-          onChange={setSortBy}
-        />
-        <Select
-          label="Sort Order"
-          data={SORT_ORDER_OPTIONS}
-          value={String(sortType)}
-          onChange={(val) => setSortType(Number(val))}
-        />
+        <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
+          <Select
+            label="Sort By"
+            data={REPORT_SORT_BY_OPTIONS}
+            value={sortBy}
+            onChange={setSortBy}
+            style={{ flex: 1 }}
+          />
+          <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
+            <ActionIcon
+              variant="light"
+              color={isDescending ? 'red' : 'blue'}
+              size={36}
+              radius="sm"
+              onClick={() => setSortType(isDescending ? 1 : -1)}
+              aria-label="Toggle Sort Order"
+            >
+              {isDescending ? (
+                <IconArrowDown size={20} />
+              ) : (
+                <IconArrowUp size={20} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
     </Paper>
   );

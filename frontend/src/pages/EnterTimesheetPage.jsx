@@ -7,6 +7,7 @@ import {
   Group,
   Stack,
   Alert,
+  Text,
 } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +15,7 @@ import { useAuth } from '../components/AuthContext';
 import TimesheetRow from '../components/TimesheetRow';
 import { projectService } from '../services/projectService';
 import { timelogService } from '../services/timelogService';
+import { userService } from '../services/userService';
 import { TypeEnum } from '../utils/constants';
 
 const createEmptyRow = () => ({
@@ -31,6 +33,7 @@ const EnterTimesheetPage = () => {
 
   const [rows, setRows] = useState([createEmptyRow()]);
   const [userProjects, setUserProjects] = useState([]);
+  const [ manager, setManager ] = useState( null );
   const [tasksMap, setTasksMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,6 +53,16 @@ const EnterTimesheetPage = () => {
               })
               .catch(console.error);
           });
+        })
+        .catch(console.error);
+      userService.getManagerByUserId(user.id)
+        .then((m) => {
+          if ( !m ){
+            setManager( null );
+          }
+          else{
+            setManager( { "userid" : m.userid, "name" : m.name });
+          }
         })
         .catch(console.error);
     }
@@ -102,6 +115,7 @@ const EnterTimesheetPage = () => {
         type: r.type,
         comments: r.comments || null,
       }));
+      console.log( "start_time: ", payload[0].start_time );
 
       await timelogService.createTimeLogs(user.id, payload);
       setSuccess('Timesheets submitted successfully!');
@@ -118,6 +132,7 @@ const EnterTimesheetPage = () => {
       <Paper p="xl" withBorder radius="md">
         <Group justify="space-between" mb="lg">
           <Title order={2}>Enter Timesheet</Title>
+          <Text c='dimmed' size='xl'>Manager: <strong>({manager ? manager.userid : 'None'}) {manager?.name}</strong></Text>
           <Button
             variant="light"
             leftSection={<IconPlus size={16} />}

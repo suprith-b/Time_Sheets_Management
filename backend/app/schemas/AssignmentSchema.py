@@ -15,10 +15,5 @@ class UsersRoleAssignmentRequest(BaseModel):
 class UserListRequest(BaseModel):
     users: list[int]
 
-
-class ProjectAssignmentRequest(BaseModel):
-    projects: list[int]
-
-
 class ProjectUserAssignmentRequest(BaseModel):
     users: list[int]

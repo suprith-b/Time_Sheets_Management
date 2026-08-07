@@ -26,6 +26,12 @@ export const ROLE_OPTIONS = [
   { value: RoleEnum.EMPLOYEE, label: 'Employee' },
 ];
 
+export const STATUS_OPTIONS_FOR_MANAGER = [
+  { value: StatusEnum.CREATED, label: 'Created' },
+  { value: StatusEnum.IN_PROGRESS, label: 'In Progress' },
+  { value: StatusEnum.COMPLETED, label: 'Completed' },
+]
+
 export const STATUS_OPTIONS = [
   { value: StatusEnum.CREATED, label: 'Created' },
   { value: StatusEnum.IN_PROGRESS, label: 'In Progress' },

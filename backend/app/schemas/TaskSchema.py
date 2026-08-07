@@ -10,7 +10,7 @@ class TaskBase(BaseModel):
 
 class TaskCreateRequest(TaskBase):
     name: str
-    description: str
+    description: Optional[ str ] = None
 
 class TaskUpdateRequest(TaskBase):
     pass

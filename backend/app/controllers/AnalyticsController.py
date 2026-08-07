@@ -1,3 +1,5 @@
+from app.core.exceptions import ManagerAccessRequiredError
+from app.core.exceptions import AdminAccessRequiredError
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -15,7 +17,7 @@ router = APIRouter(prefix="/analytics")
 
 @router.get("/reports", response_model=list[AnalyticsSchema.ReportResponse])
 def get_reports(
-    as_role: str = Query(alias="as"),
+    view_as: list[ RE ] = Query( default = [ ] ),
     start_date: datetime = Query(default=datetime(1970, 1, 1)),
     end_date: datetime = Query(default_factory=datetime.now),
     project_ids: list[int] | None = Query(default=None),
@@ -28,8 +30,20 @@ def get_reports(
     current_user: dict = Depends(get_current_user),
 ):
     RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
+    if len( view_as ) == 0:
+        if RE.MANAGER in current_user[ "user_roles" ]:
+            view_as.append( RE.MANAGER )
+        if RE.ADMIN in current_user[ "user_roles" ]:
+            view_as.append( RE.ADMIN )
+    
+    for role in view_as:
+        if role == RE.ADMIN and RE.ADMIN not in current_user[ "user_roles" ]:
+            raise AdminAccessRequiredError()
+        if role == RE.MANAGER and RE.MANAGER not in current_user[ "user_roles" ]:
+            raise ManagerAccessRequiredError()
+            
     return AnalyticsService.get_reports(
-        as_role=as_role,
+        view_as=view_as,
         start_date=start_date,
         end_date=end_date,
         project_ids=project_ids,

@@ -1,3 +1,5 @@
+from sqlalchemy.sql.functions import current_user
+from app.repositories.UserRepository import UserRepository
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
 from typing import List, Optional
@@ -7,10 +9,50 @@ from app.models.RoleModel import RoleEnum as RE
 from app.repositories.ProjectRepository import ProjectRepository
 from app.repositories.TaskRepository import TaskRepository
 import app.schemas.ProjectSchema as ProjectSchema
+import app.schemas.UserSchema as UserSchema
 from app.repositories.AssignmentRepository import AssignmentRepository
 from app.core.exceptions import AccessDeniedError, ArchivedProjectModificationError, InvalidDateRangeError, ProjectFieldUpdateForbiddenError, ProjectNotFoundError
 
 class ProjectService:
+
+    @staticmethod
+    def get_project_unassigned_users(
+        project_id: int,
+        current_user: dict,
+        db: Session,
+        page: int | None,
+        page_size: int | None
+    ) -> List[UserSchema.UserResponse]:
+        project = ProjectRepository.get_project_by_id( project_id, db )
+        if not project:
+            raise ProjectNotFoundError()
+
+        assigned_users = [ u[ "id" ] for u in 
+            UserRepository.get_users(
+            db = db,
+            manager_id = current_user[ "user_id" ] if RE.ADMIN not in current_user[ "user_roles" ] else None,
+            is_alive = [ 1 ],
+            project_ids = [ project_id ],
+            has_manager = [ True, False ],
+            current_user = current_user,
+            page = page,
+            page_size = page_size,
+            roles = None,
+            )
+        ]
+
+        unassigned_users = ProjectRepository.get_project_unassigned_users(
+            project_id = project_id,
+            current_user = current_user,
+            assigned_users = assigned_users,
+            page_size = page_size,
+            page = page,
+            db = db
+            )
+        return [UserSchema.UserResponse(**u.__dict__) for u in unassigned_users]
+        
+        
+        
 
     @staticmethod
     def create_project(data: ProjectSchema.ProjectCreateRequest, db) -> ProjectSchema.ProjectResponse:
@@ -40,7 +82,7 @@ class ProjectService:
     def update_project(project_id: int, data: ProjectSchema.ProjectUpdateRequest, current_user: dict, db: Session) -> ProjectSchema.ProjectResponse:
 
         if data.end_date:
-            raise InvalidDateRangeError("End date cannot be updated directly. Update duration or start date instead.")
+            data.end_date = None
         
         project = ProjectRepository.get_project_by_id( project_id, db )
         if project is None:
@@ -80,31 +122,23 @@ class ProjectService:
         sort_by: str,
         sort_type: int,
         status_filters: List[str],
-        current_user: dict,
         db: Session,
+        current_user: dict,
+        page: int | None,
+        page_size: int | None,
         user_id: Optional[int] = None,
     ) -> List[ProjectSchema.ProjectResponse]:
         
         status_list = [StatusEnum(s) for s in status_filters]
-        manager_project_ids = []
-        check_can_revoke = False
-        if current_user.get("user_id") == user_id:
-            pass
-        elif RE.ADMIN not in current_user.get("user_roles", []):
-            check_can_revoke = True
+
         if user_id is not None:
-            manager_project_ids = [p.id for p in ProjectRepository.get_projects(
-                sort_by=sort_by,
-                sort_type=sort_type,
-                status_filters=status_list,
-                user_id=current_user.get("user_id"),
-                db=db,
-            )]
             projects = ProjectRepository.get_projects(
                 sort_by=sort_by,
                 sort_type=sort_type,
                 status_filters=status_list,
                 user_id=user_id,
+                page = page,
+                page_size = page_size,
                 db=db,
             )
         else:
@@ -112,12 +146,11 @@ class ProjectService:
                 sort_by=sort_by,
                 sort_type=sort_type,
                 status_filters=status_list,
+                page = page,
+                page_size = page_size,
                 db=db,
             )
-        
-        return [ProjectSchema.ProjectResponse(**p.__dict__, can_revoke_project=(
-            True if not check_can_revoke else p.id in manager_project_ids
-        ), num_tasks=TaskRepository.get_task_count(p.id, db)) for p in projects]
+        return [ProjectSchema.ProjectResponse(**p.__dict__, num_tasks=TaskRepository.get_task_count(p.id, db)) for p in projects]
 
     @staticmethod
     def get_project_by_id(project_id: int, db: Session) -> ProjectSchema.ProjectResponse:

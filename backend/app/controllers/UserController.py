@@ -10,6 +10,7 @@ from app.utils.RoleValidation import RoleValidation
 from app.core.exceptions import AccessDeniedError
 from app.models.RoleModel import RoleEnum as RE
 
+
 router = APIRouter(prefix="/users")
 
 
@@ -22,13 +23,15 @@ def get_users(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
     has_manager: list[ int] | None =  Query(default=None),
+    page: int | None = Query( default = None),
+    page_size: int | None = Query( default = None ),
 ):
     RoleValidation.validate_role(current_user, [ RE.ADMIN, RE.MANAGER])
     if not has_manager:
         has_manager = [ True, False ]
     else:
         has_manager = [ True if val == 1 else False for val in has_manager]
-    return UserService.get_users(current_user, roles, manager_id, is_alive, project_ids, has_manager, db)
+    return UserService.get_users(current_user, roles, manager_id, is_alive, project_ids, has_manager, page, page_size, db)
 
 
 @router.get("/{user_id}", response_model=UserSchema.UserResponse)
@@ -48,7 +51,19 @@ def create_user(
     current_user: dict = Depends(get_current_user),
 ):
     RoleValidation.validate_role(current_user, [RE.ADMIN])
-    return UserService.create_user(data, db)
+    user = UserService.create_user(data, db)
+    if user is not None:
+        UserService.send_email( 
+            to_email = user.company_mail,
+            subject = "LOGIN CREDENTIALS",
+            body = f"""
+            <h2>Login Credentials</h2>
+            <p>Username: {user.company_mail}</p>
+            <p>Password: {user.password}</p>
+            <a href="http://localhost:5173/">Login</a>
+            """
+        )
+    return user
 
 
 @router.patch("/{user_id}", response_model=UserSchema.UserResponse)

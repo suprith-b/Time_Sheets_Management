@@ -1,8 +1,9 @@
 import React from 'react';
-import { Group, Button, Title, Badge, Box, Text } from '@mantine/core';
+import { Group, Button, Title, Badge, Box, Text, Avatar, Menu, UnstyledButton } from '@mantine/core';
+import { IconLogout, IconUser, IconClock } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { RoleEnum } from '../utils/constants';
+import { ROLE_OPTIONS, RoleEnum } from '../utils/constants';
 
 const AppHeader = () => {
   const { user, logout, isOneOfRoles } = useAuth();
@@ -11,14 +12,14 @@ const AppHeader = () => {
 
   if (!user) return null;
 
-  const isActive = (path) => location.pathname.startsWith(path) && path !== '/profile'
-    ? location.pathname.startsWith(path)
-    : location.pathname === path;
-
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
+
+  const initials = user.name
+    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?';
 
   return (
     <Box
@@ -33,18 +34,11 @@ const AppHeader = () => {
           <Title
             order={4}
             style={{ cursor: 'pointer' }}
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/timesheet')}
           >
             Timesheets
           </Title>
           <Group gap="xs">
-            <Button
-              variant={location.pathname === '/profile' ? 'filled' : 'subtle'}
-              size="sm"
-              onClick={() => navigate('/profile')}
-            >
-              Profile
-            </Button>
             {isOneOfRoles([RoleEnum.ADMIN, RoleEnum.MANAGER]) && (
               <Button
                 variant={location.pathname.startsWith('/employees') ? 'filled' : 'subtle'}
@@ -79,10 +73,19 @@ const AppHeader = () => {
                 Timesheet
               </Button>
             )}
+            {isOneOfRoles( [ RoleEnum.EMPLOYEE ] ) && (
+              <Button
+                variant={location.pathname === '/timelogs' ? 'filled' : 'subtle'}
+                size="sm"
+                onClick={() => navigate('/timelogs')}
+              >
+                Timelogs
+              </Button>
+            )}
           </Group>
         </Group>
 
-        <Group gap="sm">
+        <Group gap="sm" align="center">
           <Box style={{ textAlign: 'right' }}>
             <Text size="sm" fw={600}>{user.name}</Text>
             <Group gap={4} justify="flex-end">
@@ -93,9 +96,36 @@ const AppHeader = () => {
               ))}
             </Group>
           </Box>
-          <Button variant="outline" color="red" size="xs" onClick={handleLogout}>
-            Logout
-          </Button>
+          <Menu shadow="md" width={180} position="bottom-end">
+            <Menu.Target>
+              <UnstyledButton style={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar
+                  radius="xl"
+                  size="sm"
+                  color="blue"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {initials}
+                </Avatar>
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconUser size={14} />}
+                onClick={() => navigate('/profile')}
+              >
+                My Profile
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={14} />}
+                onClick={handleLogout}
+              >
+                Logout
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
       </Group>
     </Box>

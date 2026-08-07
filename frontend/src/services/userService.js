@@ -1,5 +1,6 @@
 import { userApi } from '../apis/userApi';
 import { assignmentApi } from '../apis/assignmentApi';
+import { projectApi } from '../apis/projectApi';
 
 export const userService = {
   fetchUsers: async (filters = {}) => {
@@ -20,6 +21,13 @@ export const userService = {
       params.has_manager = filters.hasManager;
     }
     return await userApi.getUsers(params);
+  },
+
+
+  getManagerByUserId: async (userId) => {
+    const user = await userApi.getUserById(userId);
+    if (!user || !user.manager_id) return null;
+    return await userApi.getUserById(user.manager_id);
   },
 
   getUserById: async (userId) => {
@@ -45,5 +53,9 @@ export const userService = {
 
   assignManager: async (managerId, userIds) => {
     return await assignmentApi.updateManagerForUsers(managerId, { users: userIds });
+  },
+  
+  getProjectUnassignedUsers: async (projectId) => {
+    return await projectApi.getProjectUnassignedUsers(projectId);
   },
 };

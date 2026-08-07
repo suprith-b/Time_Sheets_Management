@@ -12,7 +12,7 @@ class AnalyticsService:
 
     @staticmethod
     def get_reports(
-        as_role: str,
+        view_as: list[ RE ],
         start_date: datetime,
         end_date: datetime,
         project_ids: list[int] | None,
@@ -24,13 +24,8 @@ class AnalyticsService:
     ) -> list[AnalyticsSchema.ReportResponse]:
         user_roles = current_user.get("user_roles", [])
 
-        if as_role == RE.ADMIN and RE.ADMIN not in user_roles:
-            raise AdminAccessRequiredError()
-        if as_role == RE.MANAGER and RE.MANAGER not in user_roles:
-            raise ManagerAccessRequiredError()
-
         rows = AnalyticsRepository.get_report_data(
-            as_role=as_role,
+            view_as=view_as,
             start_date=start_date,
             end_date=end_date,
             project_ids=project_ids,
