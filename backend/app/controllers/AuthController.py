@@ -26,7 +26,7 @@ def login(
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age= 24 * 60 * 60,
+        max_age= 15 * 60
     )
     
     response.set_cookie(
@@ -35,7 +35,7 @@ def login(
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=7 * 24 * 60 * 60,
+        max_age= 12 * 60 * 60 
     )
     return user_details
 
@@ -64,7 +64,7 @@ def refresh(
         samesite="lax",
         max_age= 15 * 60
     )
-    return {"message": "Token refreshed successfully"}
+    return user_details
 
 @router.post("/logout")
 def logout(

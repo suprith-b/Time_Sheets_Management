@@ -225,7 +225,7 @@ class UserRepository:
 
         pwd_entry = db.query(Password).filter(Password.user_id == user_id).first()
         if pwd_entry:
-            pwd_entry.password = hash_password(data.password)
+            pwd_entry.password = hash_password(data.new_password)
 
         db.commit()
         return user

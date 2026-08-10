@@ -56,4 +56,5 @@ class EditUserRequest(BaseModel):
 
 
 class UpdatePasswordRequest(BaseModel):
-    password: str
+    old_password: str
+    new_password: str

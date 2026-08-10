@@ -58,7 +58,7 @@ class AuthService:
         return AuthSchema.LoginResponse(
             id=user.id,
             userid=str( user.userid ),
-            username="",
+            username=user.username or "",
             name=user.name,
             roles=roles,
         )

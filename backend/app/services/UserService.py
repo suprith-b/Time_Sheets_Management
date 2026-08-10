@@ -1,3 +1,5 @@
+from app.core.exceptions import InvalidCredentialsError
+from app.repositories.AuthRepository import AuthRepository
 from app.repositories.AssignmentRepository import AssignmentRepository
 from app.repositories.ProjectRepository import ProjectRepository
 from sqlalchemy.orm import Session
@@ -111,10 +113,14 @@ class UserService:
 
     @staticmethod
     def update_password(user_id: int, data: UserSchema.UpdatePasswordRequest, db: Session):
-        user = UserRepository.update_password(user_id, data, db)
-        if not user:
+
+        if not UserRepository.get_user_by_id(user_id, db):
             raise UserNotFoundError()
-        return {"message": "Password updated successfully"}
+
+        if not AuthRepository.validate_user_password(user_id, data.old_password, db):
+            raise InvalidCredentialsError()
+        
+        return UserRepository.update_password(user_id, data, db)
 
     @staticmethod
     def delete_user(user_id: int, db: Session):

@@ -42,8 +42,8 @@ export const userService = {
     return await userApi.editUser(userId, userData);
   },
 
-  updatePassword: async (userId, newPassword) => {
-    return await userApi.updatePassword(userId, { password: newPassword });
+  updatePassword: async (userId, oldPassword, newPassword) => {
+    return await userApi.updatePassword(userId, { old_password: oldPassword, new_password: newPassword });
   },
 
   toggleUserStatus: async (userId, currentIsAlive) => {

@@ -32,4 +32,8 @@ export const timelogService = {
     if (filters.type) params.type = filters.type;
     return await timelogApi.getUserTimeLogHours(userId, params);
   },
+
+  updateTimeLog: async (timelogId, data) => {
+    return await timelogApi.updateTimeLog(timelogId, data);
+  },
 };

@@ -21,3 +21,11 @@ class AuthRepository:
         if pwd_entry is None:
             return None
         return { "user": user, "pwd_entry": pwd_entry}
+    
+    @staticmethod
+    def validate_user_password( user_id: int, password: str, db: Session ) -> bool:
+        pwd_entry = db.query( Password ).filter( Password.user_id == user_id ).first()
+        if pwd_entry is None:
+            return False
+        return verify_password( password, pwd_entry.password )
+        

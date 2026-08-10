@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 const PasswordChangeForm = ({ userId }) => {
   const [editing, setEditing] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [ oldPassword, setOldPassword ] = useState( '' );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -15,20 +15,16 @@ const PasswordChangeForm = ({ userId }) => {
       setError('Password cannot be empty');
       return;
     }
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
 
     setLoading(true);
     setError('');
     setMessage('');
 
     try {
-      await userService.updatePassword(userId, newPassword);
+      await userService.updatePassword(userId, oldPassword, newPassword);
       setMessage('Password updated successfully');
       setNewPassword('');
-      setConfirmPassword('');
+      setOldPassword('');
       setEditing(false);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to update password');
@@ -53,16 +49,16 @@ const PasswordChangeForm = ({ userId }) => {
       ) : (
         <Group align="flex-end" grow>
           <PasswordInput
+            label="Old Password"
+            placeholder="Enter old password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+          />
+          <PasswordInput
             label="New Password"
             placeholder="Enter new password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <PasswordInput
-            label="Confirm Password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
           />
           <Group gap="xs">
             <Button size="xs" onClick={handleSave} loading={loading}>

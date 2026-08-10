@@ -1,3 +1,4 @@
+from app.repositories.UserRepository import UserRepository
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
@@ -86,6 +87,7 @@ def update_password(
 ):
     if current_user["user_id"] != user_id:
         raise AccessDeniedError()
+    
     return UserService.update_password(user_id, data, db)
 
 
