@@ -1,3 +1,4 @@
+from app.utils.InputValidation import InputValidation
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
@@ -61,6 +62,8 @@ class TimeLogService:
                 raise InvalidTimeRangeError()
             if not TimeLogRepository.is_valid_project_and_task(item.project_id, item.task_id, user_id, db):
                 raise InvalidProjectTaskAssignmentError(f"Invalid project_id {item.project_id} or task_id {item.task_id}")
+            if item.comments:
+                InputValidation.validate_length( "comments", item.comments, 300 )
 
         TimeLogRepository.create_time_logs(user_id, data.time_logs, db)
         return TimeLogSchema.TimeLogMessageResponse(message="Time logs successfully created")

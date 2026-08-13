@@ -1,3 +1,4 @@
+from app.utils.InputValidation import InputValidation
 from typing import List
 
 from app.models.RoleModel import RoleEnum as RE
@@ -26,6 +27,8 @@ class TaskService:
             if not assigned:
                 raise AccessDeniedError("Manager not assigned to this project")
 
+        InputValidation.validate_length( "task name", data.name, 100 )
+        InputValidation.validate_length( "task description", data.description, 300 )
         task = TaskRepository.create_task(project_id, data, db)
         return TaskSchema.TaskResponse(**task.__dict__)
 
@@ -46,6 +49,12 @@ class TaskService:
             )
             if not assigned:
                 raise AccessDeniedError("Manager not assigned to this project")
+
+        if data.name:
+            InputValidation.validate_length( "task name", data.name, 100 )
+        if data.description:
+            InputValidation.validate_length( "task description", data.description, 300 )
+
         updates = data.model_dump(exclude_none=True)
         updated_task = TaskRepository.update_task(task, updates, db)
         return TaskSchema.TaskResponse(**updated_task.__dict__)

@@ -55,6 +55,7 @@ class TimeLogDetailResponse(BaseModel):
     start_time: datetime
     end_time: datetime
     type: TypeEnum
+    comments: str | None = None
 
 
 class TimeLogMessageResponse(BaseModel):

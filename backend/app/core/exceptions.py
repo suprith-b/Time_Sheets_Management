@@ -4,6 +4,9 @@ from fastapi import HTTPException, status
 class ApplicationHTTPException(HTTPException):
     """Base class for application errors returned to API clients."""
 
+class InvalidInputDataError(ApplicationHTTPException):
+    def __init__(self, detail: str = "Invalid input data"):
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 class AccessDeniedError(ApplicationHTTPException):
     def __init__(self, detail: str = "You do not have permission to access this resource"):

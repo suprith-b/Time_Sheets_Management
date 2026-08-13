@@ -1,3 +1,4 @@
+from app.utils.InputValidation import InputValidation
 from sqlalchemy.sql.functions import current_user
 from app.repositories.UserRepository import UserRepository
 from sqlalchemy.orm import Session
@@ -65,6 +66,8 @@ class ProjectService:
         if data.start_date and data.end_date and data.end_date < data.start_date:
             raise InvalidDateRangeError("End date cannot be earlier than start date")
         
+        InputValidation.validate_length( "project name", data.name, 50 )
+
         project = ProjectRepository.create_project(data, db)
         to_return = ProjectSchema.ProjectResponse(**project.__dict__)
         if data.tasks:
@@ -114,6 +117,10 @@ class ProjectService:
         else:
             data.end_date = effective_start_date + timedelta(days=project.duration)
         
+        if data.name:
+            InputValidation.validate_length( "project name", data.name, 50 )
+
+
         data = ProjectRepository.update_project(project, data, db)
         return ProjectSchema.ProjectResponse(**data.__dict__)
 

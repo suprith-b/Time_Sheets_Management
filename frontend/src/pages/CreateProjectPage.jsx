@@ -116,7 +116,7 @@ const CreateProjectPage = () => {
               <DateInput
                 label="Start Date"
                 placeholder="Start Date"
-                disabled = { formData.status === StatusEnum.CREATED }
+                disabled={formData.status === StatusEnum.CREATED}
                 value={formData.start_date}
                 onChange={(val) => setFormData({ ...formData, start_date: val })}
               />

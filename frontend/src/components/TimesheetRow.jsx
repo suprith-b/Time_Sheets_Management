@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Select, ActionIcon, TextInput } from '@mantine/core';
+import { Group, Select, ActionIcon, Textarea } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { IconTrash } from '@tabler/icons-react';
 import { TIMELOG_TYPE_OPTIONS } from '../utils/constants';
@@ -66,8 +66,11 @@ const TimesheetRow = ({
         style={{ flex: 1.5 }}
       />
 
-      <TextInput
+      <Textarea
         placeholder="Comments"
+        autosize
+        minRows={1}
+        maxRows={4}
         value={row.comments || ''}
         onChange={(e) => onChange(index, 'comments', e.target.value)}
         style={{ flex: 2 }}

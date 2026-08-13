@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Group, Select, Table, Badge, Text, ActionIcon, Tooltip, Title, Container, TextInput, Alert } from '@mantine/core';
+import { Paper, Group, Select, Table, Badge, Text, ActionIcon, Tooltip, Title, Container, TextInput, Textarea, Alert } from '@mantine/core';
 import { DateInput, DateTimePicker } from '@mantine/dates';
-import { IconArrowDown, IconArrowUp, IconEdit, IconCheck, IconX } from '@tabler/icons-react';
+import { IconArrowDown, IconArrowUp, IconEdit, IconCheck, IconX, IconCalendar } from '@tabler/icons-react';
 import { timelogService } from '../services/timelogService';
 import { projectService } from '../services/projectService';
 import { TIMELOG_TYPE_OPTIONS, RoleEnum } from '../utils/constants';
@@ -136,7 +136,7 @@ const LogsSection = ({ userId }) => {
         start_time: new Date(editForm.start_time).toISOString(),
         end_time: new Date(editForm.end_time).toISOString(),
         type: editForm.type,
-        comments: editForm.comments || null,
+        comments: editForm.comments,
       });
       setEditingLogId(null);
       await loadLogs();
@@ -157,67 +157,90 @@ const LogsSection = ({ userId }) => {
   return (
     <Container size="lg" py="xl">
       {user && (
-        <Title order={2} mb="lg">
+        <Title order={2} mb="lg" style={{ color: '#0f172a' }}>
           TimeLogs: {user.name}
         </Title>
       )}
-      <Paper p="md" withBorder mb="md">
-        <Group grow align="flex-end">
+      <Paper p="sm" px="md" withBorder mb="lg" radius="md">
+        <Group align="flex-end" gap="sm">
           <CountMultiSelect
             label="Projects"
-            placeholder="Filter projects"
+            placeholder="Projects"
             data={projectSelectOptions}
             value={selectedProjects}
             onChange={setSelectedProjects}
             searchable
+            style={{ width: 160 }}
           />
           <CountMultiSelect
             label="Type"
-            placeholder="Standard / Overtime"
+            placeholder="Type"
             data={TIMELOG_TYPE_OPTIONS}
             value={selectedTypes}
             onChange={setSelectedTypes}
+            style={{ width: 145 }}
           />
           <DateInput
-            label="Start Date"
+            label={
+              <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Start Date
+              </Text>
+            }
             placeholder="Start date"
+            leftSection={<IconCalendar size={15} />}
             value={startDate}
             onChange={setStartDate}
             clearable
+            size="sm"
+            style={{ width: 135 }}
+            styles={{ input: { height: 36 } }}
           />
           <DateInput
-            label="End Date"
+            label={
+              <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                End Date
+              </Text>
+            }
             placeholder="End date"
+            leftSection={<IconCalendar size={15} />}
             value={endDate}
             onChange={setEndDate}
             clearable
+            size="sm"
+            style={{ width: 135 }}
+            styles={{ input: { height: 36 } }}
           />
-        </Group>
-
-        <Group gap="xs" align="flex-end" mt="md">
-          <Select
-            label="Sort By"
-            data={LOG_SORT_BY_OPTIONS}
-            value={sortBy}
-            onChange={setSortBy}
-            style={{ width: 220 }}
-          />
-          <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
-            <ActionIcon
-              variant="light"
-              color={isDescending ? 'red' : 'blue'}
-              size={36}
-              radius="sm"
-              onClick={() => setSortType(isDescending ? 1 : -1)}
-              aria-label="Toggle Sort Order"
-            >
-              {isDescending ? (
-                <IconArrowDown size={20} />
-              ) : (
-                <IconArrowUp size={20} />
-              )}
-            </ActionIcon>
-          </Tooltip>
+          <Group gap={6} align="flex-end">
+            <Select
+              label={
+                <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Sort By
+                </Text>
+              }
+              data={LOG_SORT_BY_OPTIONS}
+              value={sortBy}
+              onChange={setSortBy}
+              size="sm"
+              style={{ width: 130 }}
+              styles={{ input: { height: 36 } }}
+            />
+            <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
+              <ActionIcon
+                variant="light"
+                color={isDescending ? 'indigo' : 'gray'}
+                size={36}
+                radius="md"
+                onClick={() => setSortType(isDescending ? 1 : -1)}
+                aria-label="Toggle Sort Order"
+              >
+                {isDescending ? (
+                  <IconArrowDown size={16} />
+                ) : (
+                  <IconArrowUp size={16} />
+                )}
+              </ActionIcon>
+            </Tooltip>
+          </Group>
         </Group>
       </Paper>
 
@@ -234,7 +257,7 @@ const LogsSection = ({ userId }) => {
             <Table.Th>Task Name</Table.Th>
             <Table.Th>Start Time</Table.Th>
             <Table.Th>End Time</Table.Th>
-            <Table.Th>Hours</Table.Th>
+            <Table.Th>Duration</Table.Th>
             <Table.Th>Type</Table.Th>
             <Table.Th>Comments</Table.Th>
             {isAdmin && <Table.Th style={{ width: 90 }}>Actions</Table.Th>}
@@ -252,7 +275,7 @@ const LogsSection = ({ userId }) => {
                 return (
                   <Table.Tr key={log.id}>
                     <Table.Td>
-                      <Text fw={500}>{log.project_name}</Text>
+                      <Text fw={600} c="dark">{log.project_name}</Text>
                     </Table.Td>
                     <Table.Td>{log.task_name}</Table.Td>
                     <Table.Td>
@@ -286,11 +309,15 @@ const LogsSection = ({ userId }) => {
                       />
                     </Table.Td>
                     <Table.Td>
-                      <TextInput
-                        value={editForm.comments}
+                      <Textarea
+                        autosize
+                        minRows={1}
+                        maxRows={4}
+                        value={editForm.comments || ''}
                         onChange={(e) => setEditForm((prev) => ({ ...prev, comments: e.target.value }))}
                         size="xs"
                         placeholder="Comments"
+                        style={{ minWidth: 150 }}
                       />
                     </Table.Td>
                     <Table.Td>
@@ -323,7 +350,7 @@ const LogsSection = ({ userId }) => {
               return (
                 <Table.Tr key={log.id}>
                   <Table.Td>
-                    <Text fw={500}>{log.project_name}</Text>
+                    <Text fw={600} c="dark">{log.project_name}</Text>
                   </Table.Td>
                   <Table.Td>{log.task_name}</Table.Td>
                   <Table.Td>{formatDateTime(log.start_time)}</Table.Td>
@@ -334,15 +361,17 @@ const LogsSection = ({ userId }) => {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={log.type === 'standard' ? 'blue' : 'orange'}>
+                    <Badge color={log.type === 'standard' ? 'indigo' : 'orange'} variant="light">
                       {log.type}
                     </Badge>
                   </Table.Td>
-                  <Table.Td>{log.comments || '—'}</Table.Td>
+                  <Table.Td style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: 250 }}>
+                    {log.comments || '—'}
+                  </Table.Td>
                   {isAdmin && (
                     <Table.Td>
                       <ActionIcon
-                        color="blue"
+                        color="indigo"
                         variant="subtle"
                         size="sm"
                         onClick={() => handleStartEdit(log)}

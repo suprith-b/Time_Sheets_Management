@@ -22,8 +22,6 @@ class AnalyticsService:
         current_user: dict,
         db: Session,
     ) -> list[AnalyticsSchema.ReportResponse]:
-        user_roles = current_user.get("user_roles", [])
-
         rows = AnalyticsRepository.get_report_data(
             view_as=view_as,
             start_date=start_date,

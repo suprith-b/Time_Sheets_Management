@@ -12,7 +12,6 @@ const ProjectsPage = () => {
   const navigate = useNavigate();
   const { user, hasRole, isOneOfRoles } = useAuth();
   const isAdmin = hasRole(RoleEnum.ADMIN);
-  const isManager = hasRole(RoleEnum.MANAGER);
 
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState('');
@@ -57,11 +56,15 @@ const ProjectsPage = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Group justify="space-between" mb="lg">
-        <Title order={2}>Projects</Title>
+      <Group justify="space-between" align="center" mb="lg">
+        <Title order={2} style={{ color: '#0f172a' }}>
+          Projects
+        </Title>
         {isAdmin && (
           <Button
             leftSection={<IconPlus size={16} />}
+            variant="filled"
+            color="indigo"
             onClick={() => navigate('/projects/new')}
           >
             Add Project

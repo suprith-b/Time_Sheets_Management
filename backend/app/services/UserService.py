@@ -1,3 +1,4 @@
+from app.utils.InputValidation import InputValidation
 from app.core.exceptions import InvalidCredentialsError
 from app.repositories.AuthRepository import AuthRepository
 from app.repositories.AssignmentRepository import AssignmentRepository
@@ -77,8 +78,20 @@ class UserService:
     @staticmethod
     def create_user(data: UserSchema.CreateUserRequest, db: Session):
         data.password = "abc123"
+        data.userid = data.userid.lower()
+
+        InputValidation.validate_email( data.company_mail )
+        InputValidation.validate_phone_number( data.phone_number )
+        InputValidation.validate_length( "user id", data.userid, 10 )
+        InputValidation.validate_length( "name", data.name, 80 )
+        InputValidation.validate_length( "company email", data.company_mail, 50 )
+        InputValidation.validate_length( "username", data.username, 50 )
+
+        
+
         user = UserRepository.create_user(data, db)
         roles = [r.value for r in data.roles] if data.roles else [RE.EMPLOYEE.value]
+        
         return UserSchema.CreateUserResponse(
             id=user.id,
             name=user.name,
@@ -94,6 +107,19 @@ class UserService:
 
     @staticmethod
     def edit_user(user_id: int, data: UserSchema.EditUserRequest, db: Session):
+        if data.company_mail:
+            InputValidation.validate_email( data.company_mail )
+        if data.phone_number:
+            InputValidation.validate_phone_number( data.phone_number )
+        if data.userid:
+            InputValidation.validate_length( "user id", data.userid, 10 )
+        if data.name:
+            InputValidation.validate_length( "name", data.name, 80 )
+        if data.company_mail:
+            InputValidation.validate_length( "company email", data.company_mail, 50 )
+        if data.username:
+            InputValidation.validate_length( "username", data.username, 50 )
+            
         result = UserRepository.edit_user(user_id, data, db)
         if result is None:
             raise UserNotFoundError()
@@ -120,6 +146,7 @@ class UserService:
         if not AuthRepository.validate_user_password(user_id, data.old_password, db):
             raise InvalidCredentialsError()
         
+        InputValidation.validate_length( "password", data.password, 60 )
         return UserRepository.update_password(user_id, data, db)
 
     @staticmethod

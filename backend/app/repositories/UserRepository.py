@@ -150,7 +150,7 @@ class UserRepository:
         if db.query( User ).filter( User.phone_number == data.phone_number ).first() is not None:
             raise RepeatedDataError("User with this phone number already exists")
         if db.query( Password ).filter( Password.username == data.username ).first() is not None:
-            raise RepeatedDataError("Username already exists (even with inactive users)")
+            raise RepeatedDataError("Username already exists")
         user = User(
             name=data.name,
             userid=data.userid,
@@ -172,7 +172,7 @@ class UserRepository:
         except Exception as e:
             db.rollback()
             print( "error: \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", e )
-            raise RepeatedDataError()
+            raise  RepeatedDataError( e )
         
         if data.roles is None:
             data.roles = [RE.EMPLOYEE]

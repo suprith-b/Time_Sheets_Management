@@ -86,6 +86,7 @@ class TimeLogRepository:
                 TimeLog.start_time,
                 TimeLog.end_time,
                 TimeLog.type,
+                TimeLog.comments,
             )
             .join(Project, TimeLog.project_id == Project.id)
             .join(Task, TimeLog.task_id == Task.id)

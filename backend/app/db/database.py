@@ -5,7 +5,7 @@ from app.core.config import settings
 
 engine = create_engine(
     settings.DB_URL,
-    echo=True
+    echo=False
 )
 
 SessionLocal = sessionmaker(

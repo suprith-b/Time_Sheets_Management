@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, TextInput, Select, Paper, ActionIcon, Tooltip } from '@mantine/core';
+import { Group, TextInput, Select, Paper, ActionIcon, Tooltip, Text } from '@mantine/core';
 import { IconSearch, IconArrowDown, IconArrowUp } from '@tabler/icons-react';
 import { STATUS_OPTIONS } from '../utils/constants';
 import CountMultiSelect from './CountMultiSelect';
@@ -22,14 +22,21 @@ const ProjectFilterBar = ({
   const isDescending = Number(sortType) === -1;
 
   return (
-    <Paper p="md" withBorder mb="md">
-      <Group grow align="flex-end">
+    <Paper p="sm" px="md" withBorder mb="lg" radius="md">
+      <Group align="flex-end" gap="md" wrap="nowrap">
         <TextInput
-          label="Search Project"
-          placeholder="Search by name..."
-          leftSection={<IconSearch size={16} />}
+          label={
+            <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Search
+            </Text>
+          }
+          placeholder="Project name..."
+          leftSection={<IconSearch size={15} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          size="sm"
+          style={{ width: 220 }}
+          styles={{ input: { height: 36 } }}
         />
         <CountMultiSelect
           label="Status"
@@ -37,32 +44,37 @@ const ProjectFilterBar = ({
           data={STATUS_OPTIONS}
           value={status}
           onChange={setStatus}
+          style={{ width: 160 }}
         />
-        <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
-          <Select
-            label="Sort By"
-            data={SORT_BY_OPTIONS}
-            value={sortBy}
-            onChange={setSortBy}
-            style={{ flex: 1 }}
-          />
-          <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
-            <ActionIcon
-              variant="light"
-              color={isDescending ? 'red' : 'blue'}
-              size={36}
-              radius="sm"
-              onClick={() => setSortType(isDescending ? 1 : -1)}
-              aria-label="Toggle Sort Order"
-            >
-              {isDescending ? (
-                <IconArrowDown size={20} />
-              ) : (
-                <IconArrowUp size={20} />
-              )}
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+        <Select
+          label={
+            <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Sort By
+            </Text>
+          }
+          data={SORT_BY_OPTIONS}
+          value={sortBy}
+          onChange={setSortBy}
+          size="sm"
+          style={{ width: 140 }}
+          styles={{ input: { height: 36 } }}
+        />
+        <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
+          <ActionIcon
+            variant="light"
+            color={isDescending ? 'indigo' : 'gray'}
+            size={36}
+            radius="md"
+            onClick={() => setSortType(isDescending ? 1 : -1)}
+            aria-label="Toggle Sort Order"
+          >
+            {isDescending ? (
+              <IconArrowDown size={16} />
+            ) : (
+              <IconArrowUp size={16} />
+            )}
+          </ActionIcon>
+        </Tooltip>
       </Group>
     </Paper>
   );

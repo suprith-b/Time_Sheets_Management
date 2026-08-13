@@ -10,20 +10,8 @@ import {
   Group,
   UnstyledButton,
 } from '@mantine/core';
-import { IconChevronDown, IconSearch } from '@tabler/icons-react';
+import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
 
-/**
- * A multiselect that shows "N selected" as the trigger instead of chips.
- * Expands a dropdown when clicked. Supports searchable list.
- *
- * Props:
- *  - label: string
- *  - placeholder: string (shown when nothing selected)
- *  - data: { value, label }[]
- *  - value: string[]
- *  - onChange: (string[]) => void
- *  - searchable: boolean
- */
 const CountMultiSelect = ({
   label,
   placeholder = 'Select...',
@@ -32,12 +20,12 @@ const CountMultiSelect = ({
   onChange,
   searchable = false,
   disabled = false,
+  style = {},
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const ref = useRef(null);
 
-  // Close when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -73,9 +61,9 @@ const CountMultiSelect = ({
       : `${value.length} selected`;
 
   return (
-    <Box style={{ position: 'relative', flex: 1 }} ref={ref}>
+    <Box style={{ position: 'relative', minWidth: 130, ...style }} ref={ref}>
       {label && (
-        <Text size="sm" fw={500} mb={4} c={disabled ? 'dimmed' : undefined}>
+        <Text size="xs" fw={600} mb={4} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           {label}
         </Text>
       )}
@@ -85,46 +73,63 @@ const CountMultiSelect = ({
         disabled={disabled}
         style={{
           width: '100%',
-          border: '1px solid var(--mantine-color-gray-4)',
-          borderRadius: 'var(--mantine-radius-sm)',
-          padding: '6px 10px',
+          height: '36px',
+          border: disabled ? '1px solid #e2e8f0' : open ? '1px solid #6366f1' : '1px solid #cbd5e1',
+          borderRadius: '8px',
+          padding: '0 10px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: disabled
-            ? 'var(--mantine-color-gray-1)'
-            : 'var(--mantine-color-white)',
+          backgroundColor: disabled ? '#f1f5f9' : '#ffffff',
           cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.6 : 1,
+          boxShadow: open && !disabled ? '0 0 0 3px rgba(99, 102, 241, 0.15)' : 'none',
+          transition: 'all 0.15s ease',
         }}
       >
-        <Text size="sm" c={disabled ? 'dimmed' : value.length === 0 ? 'dimmed' : 'dark'}>
-          {triggerLabel}
-        </Text>
-        <IconChevronDown size={14} />
+        <Group gap="xs" style={{ overflow: 'hidden', flex: 1 }} wrap="nowrap">
+          <Text
+            size="xs"
+            truncate
+            fw={value.length > 0 ? 500 : 400}
+            style={{ color: value.length === 0 ? (disabled ? '#64748b' : '#94a3b8') : '#0f172a' }}
+          >
+            {triggerLabel}
+          </Text>
+          {value.length > 1 && (
+            <Badge size="xs" variant="filled" color="indigo" radius="xl">
+              {value.length}
+            </Badge>
+          )}
+        </Group>
+        <IconChevronDown size={14} style={{ color: '#64748b', transition: 'transform 0.15s ease', transform: open ? 'rotate(180deg)' : 'none' }} />
       </UnstyledButton>
 
       {open && !disabled && (
         <Paper
           shadow="md"
           withBorder
+          radius="md"
           style={{
             position: 'absolute',
             top: '100%',
             left: 0,
-            right: 0,
-            zIndex: 200,
+            minWidth: '200px',
+            maxWidth: '280px',
+            zIndex: 300,
             marginTop: 4,
+            backgroundColor: '#ffffff',
+            borderColor: '#e2e8f0',
           }}
         >
           {searchable && (
-            <Box p="xs" pb={0}>
+            <Box p="xs" style={{ borderBottom: '1px solid #f1f5f9' }}>
               <TextInput
                 placeholder="Search..."
                 leftSection={<IconSearch size={14} />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 size="xs"
+                radius="sm"
                 autoFocus
               />
             </Box>
@@ -133,19 +138,34 @@ const CountMultiSelect = ({
           <ScrollArea.Autosize mah={200}>
             <Box p="xs">
               {filtered.length === 0 ? (
-                <Text size="sm" c="dimmed" ta="center" py="xs">
-                  No options
+                <Text size="xs" c="dimmed" ta="center" py="xs">
+                  No options found
                 </Text>
               ) : (
                 filtered.map((item) => (
-                  <Checkbox
+                  <Box
                     key={item.value}
-                    label={item.label}
-                    checked={value.includes(item.value)}
-                    onChange={() => toggle(item.value)}
-                    mb="xs"
-                    size="sm"
-                  />
+                    onClick={() => toggle(item.value)}
+                    style={{
+                      padding: '5px 8px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: value.includes(item.value) ? '#eef2ff' : 'transparent',
+                      transition: 'all 0.1s ease',
+                    }}
+                  >
+                    <Checkbox
+                      label={item.label}
+                      checked={value.includes(item.value)}
+                      onChange={() => {}}
+                      size="xs"
+                      color="indigo"
+                      radius="sm"
+                      style={{ pointerEvents: 'none', width: '100%' }}
+                    />
+                  </Box>
                 ))
               )}
             </Box>
@@ -153,14 +173,33 @@ const CountMultiSelect = ({
 
           {value.length > 0 && (
             <Box
-              px="xs"
-              pb="xs"
-              style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}
+              p="xs"
+              style={{
+                borderTop: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#f8fafc',
+                borderBottomLeftRadius: '8px',
+                borderBottomRightRadius: '8px',
+              }}
             >
-              <UnstyledButton onClick={() => onChange([])} style={{ cursor: 'pointer' }}>
-                <Text size="xs" c="dimmed">
-                  Clear all
-                </Text>
+              <Text size="xs" c="dimmed">
+                {value.length} selected
+              </Text>
+              <UnstyledButton
+                onClick={() => onChange([])}
+                style={{
+                  cursor: 'pointer',
+                  color: '#ef4444',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                }}
+              >
+                <IconX size={12} /> Clear
               </UnstyledButton>
             </Box>
           )}

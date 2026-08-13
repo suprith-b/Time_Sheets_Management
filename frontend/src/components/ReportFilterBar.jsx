@@ -1,7 +1,7 @@
 import React from 'react';
-import { Group, Select, Paper, ActionIcon, Box, Text, Tooltip } from '@mantine/core';
+import { Group, Select, Paper, ActionIcon, Tooltip, Text } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
+import { IconArrowDown, IconArrowUp, IconCalendar } from '@tabler/icons-react';
 import {
   TIMELOG_TYPE_OPTIONS,
   RoleEnum,
@@ -11,7 +11,6 @@ import { useAuth } from './AuthContext';
 
 const REPORT_SORT_BY_OPTIONS = [
   { value: 'duration', label: 'Duration' },
-  { value: 'start_time', label: 'Start Time' },
   { value: 'project_name', label: 'Project Name' },
 ];
 
@@ -58,68 +57,90 @@ const ReportFilterBar = ({
   const isDescending = Number(sortType) === -1;
 
   return (
-    <Paper p="md" withBorder mb="md">
-      <Group grow align="flex-end">
+    <Paper p="sm" px="md" withBorder mb="lg" radius="md">
+      <Group align="flex-end" gap="sm">
         <CountMultiSelect
           label="View As"
           placeholder="View As"
           data={viewAsOptions}
           value={viewAs}
           onChange={setViewAs}
+          style={{ width: 135 }}
         />
         <CountMultiSelect
           label="Projects"
-          placeholder="Filter projects"
+          placeholder="Projects"
           data={projectOptions}
           value={projects}
           onChange={setProjects}
           searchable
+          style={{ width: 150 }}
         />
         <CountMultiSelect
           label="Type"
-          placeholder="Standard / Overtime"
+          placeholder="Type"
           data={TIMELOG_TYPE_OPTIONS}
           value={type}
           onChange={setType}
+          style={{ width: 145 }}
         />
-      </Group>
-
-      <Group grow align="flex-end" mt="md">
         <DateInput
-          label="Start Date"
-          placeholder="Select start date"
+          label={
+            <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Start Date
+            </Text>
+          }
+          placeholder="Start date"
+          leftSection={<IconCalendar size={15} />}
           value={startDate}
           onChange={setStartDate}
           clearable
+          size="sm"
+          style={{ width: 135 }}
+          styles={{ input: { height: 36 } }}
         />
         <DateInput
-          label="End Date"
-          placeholder="Select end date"
+          label={
+            <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              End Date
+            </Text>
+          }
+          placeholder="End date"
+          leftSection={<IconCalendar size={15} />}
           value={endDate}
           onChange={setEndDate}
           clearable
+          size="sm"
+          style={{ width: 135 }}
+          styles={{ input: { height: 36 } }}
         />
-        <Group gap="xs" align="flex-end" style={{ flex: 1 }}>
+        <Group gap={6} align="flex-end">
           <Select
-            label="Sort By"
+            label={
+              <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Sort By
+              </Text>
+            }
             data={REPORT_SORT_BY_OPTIONS}
             value={sortBy}
             onChange={setSortBy}
-            style={{ flex: 1 }}
+            size="sm"
+            style={{ width: 130 }}
+            styles={{ input: { height: 36 } }}
           />
           <Tooltip label={isDescending ? 'Descending' : 'Ascending'}>
             <ActionIcon
               variant="light"
-              color={isDescending ? 'red' : 'blue'}
+              color={isDescending ? 'indigo' : 'gray'}
               size={36}
-              radius="sm"
+              radius="md"
               onClick={() => setSortType(isDescending ? 1 : -1)}
               aria-label="Toggle Sort Order"
             >
               {isDescending ? (
-                <IconArrowDown size={20} />
+                <IconArrowDown size={16} />
               ) : (
-                <IconArrowUp size={20} />
+                <IconArrowUp size={16} />
               )}
             </ActionIcon>
           </Tooltip>

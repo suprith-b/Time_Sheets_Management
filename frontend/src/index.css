@@ -1,111 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Color Palette */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --border-color: #e2e8f0;
+  --border-focus: #818cf8;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --primary-light: #eef2ff;
+  --primary-text: #4338ca;
+
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  text-align: left;
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-dark);
   margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Custom Glass Cards */
+.custom-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+  transition: var(--transition-normal);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.custom-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Form Labels & Input Enhancements */
+.mantine-InputWrapper-label {
+  font-size: 0.775rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px !important;
+}
+
+.mantine-TextInput-input,
+.mantine-Select-input,
+.mantine-NumberInput-input,
+.mantine-PasswordInput-input,
+.mantine-DateInput-input,
+.mantine-MultiSelect-input {
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border-color) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.9rem !important;
+  color: var(--text-dark) !important;
+  transition: var(--transition-fast) !important;
+  height: 40px !important;
+  background-color: #ffffff !important;
+}
+
+.mantine-TextInput-input:focus,
+.mantine-Select-input:focus,
+.mantine-NumberInput-input:focus,
+.mantine-PasswordInput-input:focus,
+.mantine-DateInput-input:focus,
+.mantine-MultiSelect-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Button Styling Overrides */
+.mantine-Button-root {
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
+  transition: var(--transition-fast) !important;
+  letter-spacing: 0.01em;
+}
+
+.mantine-Button-root:hover {
+  transform: translateY(-1px);
+}
+
+.mantine-Button-filled {
+  background: var(--primary-gradient) !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25) !important;
+}
+
+.mantine-Button-filled:hover {
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+}
+
+/* Modern Tables Styling */
+.mantine-Table-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: #ffffff !important;
+}
+
+.mantine-Table-thead {
+  background-color: var(--bg-subtle) !important;
+}
+
+.mantine-Table-th {
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  font-size: 0.775rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.mantine-Table-td {
+  padding: 14px 18px !important;
+  font-size: 0.9rem !important;
+  color: var(--text-dark) !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  vertical-align: middle !important;
+  transition: var(--transition-fast);
+}
+
+.mantine-Table-tr {
+  transition: var(--transition-fast);
+}
+
+.mantine-Table-tr:hover {
+  background-color: #f8fafc !important;
+}
+
+.mantine-Table-tr:last-child .mantine-Table-td {
+  border-bottom: none !important;
+}
+
+/* Custom Badges */
+.mantine-Badge-root {
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 4px 10px !important;
+}
+
+/* Disabled inputs: keep desaturated bg but make placeholder text readable */
+.mantine-TextInput-input:disabled,
+.mantine-TextInput-input[disabled],
+.mantine-Select-input:disabled,
+.mantine-Select-input[disabled],
+.mantine-NumberInput-input:disabled,
+.mantine-NumberInput-input[disabled],
+.mantine-PasswordInput-input:disabled,
+.mantine-PasswordInput-input[disabled],
+.mantine-DateInput-input:disabled,
+.mantine-DateInput-input[disabled],
+.mantine-Textarea-input:disabled,
+.mantine-Textarea-input[disabled] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.mantine-DateInput-input[disabled],
+.mantine-TextInput-input:disabled,
+.mantine-TextInput-input[disabled],
+.mantine-Select-input:disabled,
+.mantine-Select-input[disabled],
+.mantine-NumberInput-input:disabled,
+.mantine-NumberInput-input[disabled],
+.mantine-PasswordInput-input:disabled,
+.mantine-PasswordInput-input[disabled],
+.mantine-DateInput-input:disabled,
+.mantine-DateInput-input[disabled],
+.mantine-Textarea-input:disabled,
+.mantine-Textarea-input[disabled]{
+  color: #000000 !important;
+  -webkit-text-fill-color: rgb(0, 0, 0);
+  opacity: 1 !important;
 }

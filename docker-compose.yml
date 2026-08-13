@@ -1,0 +1,63 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: timesheets_db
+    restart: always
+
+    env_file:
+      - ./backend/.env
+
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    env_file:
+      - ./backend/.env
+
+    container_name: timesheets_backend
+    restart: always
+
+    ports:
+      - "8000:8000"
+      
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    env_file:
+      - ./frontend/.env
+
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+      args:
+        VITE_BACKEND_URL: http://localhost:8000
+
+    container_name: timesheets_frontend
+    restart: always
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

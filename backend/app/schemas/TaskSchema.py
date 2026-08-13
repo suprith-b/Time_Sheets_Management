@@ -13,7 +13,8 @@ class TaskCreateRequest(TaskBase):
     description: Optional[ str ] = None
 
 class TaskUpdateRequest(TaskBase):
-    pass
+    name: str | None = None
+    description: Optional[ str ] = None
 
 class TaskResponse(TaskBase):
     model_config = ConfigDict(from_attributes=True)

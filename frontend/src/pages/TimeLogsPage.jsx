@@ -8,7 +8,7 @@ const TimeLogsPage = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="lg">
+      <Title order={2} mb="lg" style={{ color: '#0f172a' }}>
         Time Logs
       </Title>
       <LogsSection userId={currentUser?.id} />

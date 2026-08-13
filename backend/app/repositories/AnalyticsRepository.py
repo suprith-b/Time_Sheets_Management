@@ -66,6 +66,6 @@ class AnalyticsRepository:
         if not RE.ADMIN in view_as:
             query = query.filter(User.manager_id == current_user_id)
         if not RE.MANAGER in view_as:
-            query = query.filter( User.id == current_user_id)
+            query = query.filter( User.manager_id.is_( None ))
 
         return query.all()

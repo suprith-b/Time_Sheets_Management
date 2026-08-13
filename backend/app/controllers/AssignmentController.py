@@ -56,7 +56,7 @@ def add_users_to_project(
 ):
     RoleValidation.validate_role(current_user, [RE.ADMIN, RE.MANAGER])
 
-    if not UserRepository.check_users_role([data.users], RE.EMPLOYEE, db):
+    if not UserRepository.check_users_role(data.users, RE.EMPLOYEE, db):
         raise UserNotFoundError("One or more users are not employees")
     
     if not RE.ADMIN in current_user.get("user_roles", []):

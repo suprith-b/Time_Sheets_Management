@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { RoleEnum } from '../utils/constants';
 import EmployeeFilterBar from '../components/EmployeeFilterBar';
-import LogsSection from '../components/LogsSection';
 import EmployeeTable from '../components/EmployeeTable';
 import { userService } from '../services/userService';
 import { projectService } from '../services/projectService';
@@ -18,8 +17,7 @@ const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
   const [managersList, setManagersList] = useState([]);
   const [projectsList, setProjectsList] = useState([]);
-
-  const [ showTimeLogs, setShowTimeLogs ] = useState(null)
+  const [showTimeLogs, setShowTimeLogs] = useState(null);
 
   const [search, setSearch] = useState('');
   const [roles, setRoles] = useState([]);
@@ -80,11 +78,15 @@ const EmployeesPage = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Group justify="space-between" mb="lg">
-        <Title order={2}>Employees</Title>
+      <Group justify="space-between" align="center" mb="lg">
+        <Title order={2} style={{ color: '#0f172a' }}>
+          Employees
+        </Title>
         {isAdmin && (
           <Button
             leftSection={<IconPlus size={16} />}
+            variant="filled"
+            color="indigo"
             onClick={() => navigate('/employees/new')}
           >
             Add Employee
